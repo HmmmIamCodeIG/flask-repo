@@ -1,5 +1,38 @@
 body {
     color: black;
     font-family: Arial, sans-serif;
-    background-color: black;
+    margin: 0;
+    padding: 0;
+    background-color: white;
+    color: black;
+}
+
+header {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+}
+
+navbar {
+    background-color: #f8f9fa;
+    padding: 10px 20px;
+    text-align: center;
+}
+
+navbar a {
+    margin: 0 15px;
+    text-decoration: none;
+    color: #007BFF;
+    font-weight: bold;
+}
+
+navbar a:hover {
+    text-decoration: underline;
+}
+
+h1 {
+    color: white;
+    text-align: center;
+    margin-top: 20px;
 }
