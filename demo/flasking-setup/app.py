@@ -5,15 +5,13 @@ app = Flask(__name__)
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
-    return conn
 
     # insecure: plain text password comparison
     conn = get_db_connection()
     cursor = conn.cursor()
 
     # using parameterized queries to prevent SQL injection
-    cursor.execute('SELECT * FROM users WHERE username = ? AND hashed_password = ?', (username, password))
-    user = cursor.fetchone()
+    return conn
 
 
 @app.route('/')
