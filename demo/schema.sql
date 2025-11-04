@@ -1,9 +1,7 @@
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    hashed_password TEXT NOT NULL,
-    email TEXT NOT NULL UNIQUE,
-    display_name TEXT
+CREATE TABLE users (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    username NVARCHAR(255) NOT NULL UNIQUE,
+    hashed_password NVARCHAR(255) NOT NULL,
+    email NVARCHAR(255) NOT NULL UNIQUE,
+    display_name NVARCHAR(255) NULL
 );
-
--- sqlite3 database.db "read schema.sql"
