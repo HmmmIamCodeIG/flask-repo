@@ -37,7 +37,10 @@ def login():
             flash('Login successful!', 'success')
             conn.close()
             return redirect(url_for('dashboard'))
-
+        except sqlite3.Error as e:
+            conn.close()
+            flash(f'Error: {str(e)}', 'error')
+            return redirect(url_for('login'))
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
