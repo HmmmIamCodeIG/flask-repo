@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
 
 app = Flask(__name__)
@@ -29,25 +29,28 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        try:
-            cursor.execute(
-                f"SELECT * FROM Users WHERE username = '{username}' AND hashed_password = '{password}"
-            )
-            conn.commit()
+        cursor.execute(f"SELECT * FROM Users WHERE username = '{username}' AND hashed_password = '{password}'")
+        user = cursor.fetchone()
+        conn.close()
+
+        if user:
+            session['user_id'] = user['id']
             flash('Login successful!', 'success')
-            conn.close()
             return redirect(url_for('dashboard'))
-        except:
-            return render_template('login.html')
+        else:
+            flash('Invalid username or password', 'error')
+            return redirect(url_for('login'))
+        
+    return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
-        displayName = request.form['displayName']
+        displayName = request.form['display_name']
         email = request.form['email']
         password = request.form['password']
-        confirmPassword = request.form['confirmPassword']
+        confirmPassword = request.form['confirm_password']
 
         # Insecure: Plain-text password comparison
         conn = get_db_connection()
