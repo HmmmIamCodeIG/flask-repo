@@ -1,0 +1,15 @@
+{% extends 'base.html' %}   
+{% block title %}Add Progress - Smart Study Quiz App{% endblock %}
+{% block heading %}Add Progress{% endblock %}
+{% block content %}
+    <p> Enter your details to add progress </p>
+    <form method="POST" action="{{ url_for('add_progress') }}">
+        <p>Date
+        <input type="date" name="date" required></p>
+        <p>Title
+        <input type="text" name="title" placeholder="Title" required></p>
+        <p>Details
+        <input type="text" name="details" placeholder="Details" required></p>
+        <button type="submit">Post Progress</button>
+    </form>
+{% endblock %}

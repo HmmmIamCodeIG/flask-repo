@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 import sqlite3
+from datetime import date
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret-key'  # For sessions and flash messages
@@ -80,6 +81,37 @@ def register():
             return redirect(url_for('register'))
 
     return render_template('register.html')
+
+@app.route('/add_progress', methods=['GET', 'POST'])
+def add_progress():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        date = request.form['date']
+        title = request.form['title']
+        details = request.form['details']
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            # Insecure: Directly interpolate session user_id into SQL for teaching purposes
+            cursor.execute(
+                f"INSERT INTO ProgressLogs (user_id, date, title, details) VALUES ('{session['user_id']}', '{date}', '{title}', '{details}')"
+            )
+            conn.commit()
+            flash('Progress log added successfully!', 'success')
+            return redirect(url_for('dashboard'))  # Redirect after successful insert
+        except sqlite3.IntegrityError:
+            conn.close()
+            flash('Please enter a complete log.', 'error')
+            return redirect(url_for('add_progress'))
+        except Exception as e:
+            conn.close()
+            flash(f'Error: {str(e)}', 'error')
+            return redirect(url_for('add_progress'))
+        
+    return render_template('addProgress.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
