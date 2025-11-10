@@ -113,5 +113,22 @@ def add_progress():
         
     return render_template('addProgress.html')
 
+@app.route('/view_progress', methods=['GET', 'POST'])
+def view_progress():
+    if 'user_id' not in session:
+        flash("Please log in to view your progress.", 'error')
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(f'SELECT * FROM ProgressLogs WHERE user_id = {session["user_id"]} ORDER BY date DESC')
+    posts = cursor.fetchall()
+    conn.close()
+    # display no posts, if user has none 
+    # display all posts if user has - dynamic
+    return render_template('viewProgress.html', posts = posts)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
