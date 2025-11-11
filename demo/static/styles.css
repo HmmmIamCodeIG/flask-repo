@@ -77,9 +77,13 @@ form {
 
 content {
     margin-bottom: 10px;
-    font-size: 20px;
+    font-size: 30px;
     text-align: center;
     text-shadow: #abccf0 2px 2px 2px;
+    margin-top: 20px;
+    font-weight: bold;
+    border-radius: 10px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
 button {
@@ -130,17 +134,10 @@ button::after {
     z-index: -2;
 }
 
-button:hover::before,
+button:hover::before, 
 button:hover::after {
     opacity: 1;
     transform: scale(1);
-}
-
-content {
-    font-size: 30px;
-    margin-top: 20px;
-    text-align: center;
-    font-weight: bold;
 }
 
 flash p.success {
