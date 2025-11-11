@@ -2,17 +2,23 @@
 {% block title %}View Progress - Smart Study Quiz App{% endblock %}
 {% block heading %}Progress Check!!!!{% endblock %}
 {% block content %}
-    <p> View your Progress </p>
-    { % if posts %}
-    <ul>
-        { % for post in posts %}
-            <li>
-                <strong>{{ post.date }} - {{ post.title }}</strong>
-                {{ post.details }}
-            </li>
-        { % endfor %}
-    </ul>
-    { % else %}
+    <headingit>View your Progress</headingit>
+    {% if posts %}
+        <table>
+                <tr>
+                    <th>DATE</th>
+                    <th>TITLE</th>
+                    <th>DETAILS</th>
+                </tr>
+            {% for post in posts %}
+                <tr>
+                    <td>{{ post.date }}</td>
+                    <td>{{ post.title }}</td>
+                    <td>{{ post.details }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    {% else %}
         <p>No progress logs found.</p>
-    { % endif %}
+    {% endif %}
 {% endblock %}

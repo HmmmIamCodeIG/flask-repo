@@ -1,6 +1,6 @@
 body {
     color: black;
-    font-family: Arial, sans-serif;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: white;
@@ -14,41 +14,45 @@ header {
     text-align: center;
 }
 
-navbar {
+nav, .navbar {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: 10px 20px;
+    padding: 10px 0;
     background-color: #d0e7ffbd;
 }
 
-navbar a {
+nav a, .navbar a {
     margin: 0 15px;
     text-decoration: none;
     color: #0372e8;
     font-weight: bold;
-
-  &:after {
-    background: #fff;
-    content: "";
-    height: 155px;
-    left: -75px;
-    opacity: .2;
-    position: absolute;
-    top: -50px;
-    transform: rotate(35deg);
-    transition: all 550ms cubic-bezier(0.19, 1, 0.22, 1);
-    width: 50px;
-    z-index: -10;
-  }
+    position: relative;
+    font-size: 20px;
 }
 
-navbar a:hover {
-    text-decoration: underline;
-        &:after {
-    left: 120%;
-    transition: all 550ms cubic-bezier(0.19, 1, 0.22, 1);
-    }
+nav a:hover, .navbar a:hover {
+    text-decoration: none;
+}
+
+nav a::after, .navbar a::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    transform: translateX(-50%) scaleX(0);
+    transform-origin: center;
+    width: 60%;
+    height: 3px;
+    background-color: #0056b3;
+    border-radius: 2px;
+    opacity: 0;
+    transition: transform 350ms cubic-bezier(0.19, 1, 0.22, 1), opacity 500ms ease;
+}
+
+nav a:hover::after, .navbar a:hover::after {
+    transform: translateX(-50%) scaleX(1);
+    opacity: 1;
 }
 
 h1 {
@@ -59,21 +63,23 @@ h1 {
 
 form {
     max-width: 400px;
-    margin: 20px auto;
+    margin: 30px auto;
     padding: 40px;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 10px rgba(3, 87, 132, 0.814);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: normal;
+    text-shadow: #beddff 1px 1px 1px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
 content {
-    margin-bottom: 15px;
-    font-size: 16px;
+    margin-bottom: 10px;
+    font-size: 20px;
     text-align: center;
+    text-shadow: #abccf0 2px 2px 2px;
 }
 
 button {
@@ -83,15 +89,52 @@ button {
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-    margin: 20px 0;
-
+    font-size: 20px;
+    margin: 20px 20px;
+    --glow-color: #9dd1ff; 
+    position: relative;
+    isolation: isolate;    
+    overflow: visible;
+    transition: transform .2s ease, box-shadow .3s ease, background-color .2s ease;
+    
 }
 
 button:hover {
     background-color: #0056b3;
-    box-shadow:rgba(0, 0, 0, 0.1) 0px 10px 50px;
-    }
+    box-shadow:
+        0 0 0 1px color-mix(in oklab, var(--glow-color), white 70%) inset,
+        0 6px 20px -6px rgba(0, 0, 0, 0.4),
+        0 0 24px var(--glow-color);
+    transform: translateY(-1px);    
+}
+
+button::before {
+    background: radial-gradient(60% 80% at 50% 120%, var(--glow-color) 0%, transparent 60%);
+    filter: blur(12px);
+    transform: scale(0.98);
+}
+
+button::after {
+    inset: -8px;
+    background: conic-gradient(
+        from 0deg at 50% 50%,
+        transparent 0 15%,
+        var(--glow-color) 15% 35%,
+        transparent 35% 50%,
+        var(--glow-color) 50% 65%,
+        transparent 65% 85%,
+        var(--glow-color) 85% 100%
+    );
+    filter: blur(18px);
+    transform: scale(0.95);
+    z-index: -2;
+}
+
+button:hover::before,
+button:hover::after {
+    opacity: 1;
+    transform: scale(1);
+}
 
 content {
     font-size: 30px;
@@ -112,4 +155,42 @@ flash p.error {
     font-style: italic;
     font-size: 15px;
     margin: 20px 0;
+}
+
+table {
+    width: 80%;
+    margin: 20px auto;
+    border-collapse: collapse;
+}
+
+th {
+    background-color:#0056b3;
+    color: white;
+    font-size: 18px;
+    padding: 10px;
+    text-align: center;
+    border-left: 4px solid #ddd;
+    border-right: 4px solid #ddd;
+    border-top: #0056b3 4px solid;
+}
+
+td {
+    font-size: 14px;
+    padding: 10px;
+    text-align: center;
+    border: 4px solid #ddd;
+}
+
+input {
+    width: 100%;
+    padding: 5px;
+    margin: 4px 0 10px 0;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+a:hover {
+    color: #0056b3;
+    --glow-color: #9dd1ff;
 }
