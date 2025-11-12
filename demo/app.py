@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from datetime import date
 
@@ -60,14 +61,15 @@ def register():
         cursor = conn.cursor()
 
         # Using parameterized query to avoid SQL injection, but password is still plain-text
-        # exists = cursor.execute(f"SELECT COUNT(username) FROM Users WHERE username = '{username}'")
+        # exists = cursor.execute(f"SELECT COUNT(username) FROM Users WHERE username = '{username}'"
 
         if password != confirmPassword:
             flash('Passwords do not match', 'error')
             return redirect(url_for('register'))
         try:
             cursor.execute(
-                f"INSERT INTO Users (username, hashed_password, email, display_name) VALUES ('{username}', '{password}', '{email}', '{displayName}')"
+                f"INSERT INTO Users (username, hashed_password, email, display_name) VALUES (?, ?, ?, ?)",
+                (username, generate_password_hash(password) , email, displayName)
             )
             conn.commit()
             flash('Registration successful! Please log in.', 'success')
