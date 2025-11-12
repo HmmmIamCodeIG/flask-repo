@@ -18,6 +18,8 @@ def index():
 
 @app.route('/dashboard')
 def dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
     return render_template('dashboard.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -128,7 +130,6 @@ def view_progress():
     # display no posts, if user has none 
     # display all posts if user has - dynamic
     return render_template('viewProgress.html', posts = posts)
-
 
 if __name__ == '__main__':
     app.run(debug=True)
