@@ -33,11 +33,11 @@ def login():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute(f"SELECT * FROM Users WHERE username = '{username}' AND hashed_password = '{password}'")
+        cursor.execute("SELECT id, username, hashed_password FROM Users WHERE username = ?", (username,))
         user = cursor.fetchone()
         conn.close()
 
-        if user:
+        if user and check_password_hash(user['hashed_password'], password):
             session['user_id'] = user['id']
             flash('Login successful!', 'success')
             return redirect(url_for('dashboard'))
@@ -46,6 +46,17 @@ def login():
             return redirect(url_for('login'))
         
     return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    if 'user_id' not in session:
+        flash("you need to log in first.", 'error')
+    else:
+        session.pop('user_id', None)
+        flash('You have been logged out.', 'success')
+    return redirect(url_for('login'))
+# add a link to base.html to run route -- in the navbar
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():

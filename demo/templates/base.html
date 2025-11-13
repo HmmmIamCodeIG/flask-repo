@@ -17,6 +17,9 @@
         <a href="{{ url_for('add_progress') }}">Add Progress</a>
         <a href="{{ url_for('view_progress') }}">View Progress</a>
     </nav>
+    <div class="logout-button">
+        <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
     <content>
         <flash>
             {% with messages = get_flashed_messages(with_categories=true) %}

@@ -2,7 +2,9 @@
 {% block title %}View Progress - Smart Study Quiz App{% endblock %}
 {% block heading %}Progress Check!!!!{% endblock %}
 {% block content %}
+<div class="heading">
     <p>View your Progress</p>
+</div>
     {% if posts %}
         <table>
                 <tr>
@@ -19,6 +21,8 @@
             {% endfor %}
         </table>
     {% else %}
+    <div class="no-progress">
         <p>No progress logs found.</p>
+    </div>
     {% endif %}
 {% endblock %}

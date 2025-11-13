@@ -1,6 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda+SC:ital,opsz,wght@0,6..96,400..900;1,6..96,400..900&family=Cal+Sans&family=Matangi:wght@300..900&family=Mitr:wght@200;300;400;500;600;700&family=Port+Lligat+Sans&family=Ysabeau+SC:wght@1..1000&display=swap');
+
 body {
     color: black;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: white;
@@ -8,10 +9,22 @@ body {
 }
 
 header {
-    background-color: #007BFF;
+    background-color: #ee6c6c;
     color: white;
-    padding: 10px 20px;
+    padding: 5px 5px;
     text-align: center;
+    font-family: 'cal Sans', sans-serif;
+    font-size: 30px;
+    font-weight: bold;
+}
+
+.heading p {
+    font-size: 40px;
+    font-weight: bold;
+    margin: 20px;
+    padding: 20px 10px;
+    text-align: center;
+    font-family: 'Matangi', sans-serif;
 }
 
 nav, .navbar {
@@ -19,14 +32,22 @@ nav, .navbar {
     display: flex;
     justify-content: center;
     padding: 10px 0;
-    background-color: #d0e7ffbd;
+    background-color: #ffb4b4bd;
+    font-family: 'Bondoni Moda SC', serif;
+}
+
+.logout-button a {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-family: 'Bondoni Moda SC', serif;
+    color: white;
 }
 
 nav a, .navbar a {
     margin: 0 15px;
     text-decoration: none;
-    color: #0372e8;
-    font-weight: bold;
+    color: #ffffff;
     position: relative;
     font-size: 20px;
 }
@@ -44,7 +65,7 @@ nav a::after, .navbar a::after {
     transform-origin: center;
     width: 60%;
     height: 3px;
-    background-color: #0056b3;
+    background-color: #910d0d;
     border-radius: 2px;
     opacity: 0;
     transition: transform 350ms cubic-bezier(0.19, 1, 0.22, 1), opacity 500ms ease;
@@ -58,7 +79,7 @@ nav a:hover::after, .navbar a:hover::after {
 h1 {
     color: white;
     text-align: center;
-    margin-top: 20px;
+    margin: 30px;
 }
 
 form {
@@ -66,28 +87,16 @@ form {
     margin: 30px auto;
     padding: 40px;
     border-radius: 5px;
-    box-shadow: 0 0 10px rgba(3, 87, 132, 0.814);
+    box-shadow: 0 0 10px rgba(85, 85, 85, 0.814);
     display: flex;
     flex-direction: column;
     font-size: 20px;
     font-weight: normal;
-    text-shadow: #beddff 1px 1px 1px;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
-}
-
-content {
-    margin-bottom: 10px;
-    font-size: 30px;
-    text-align: center;
-    text-shadow: #abccf0 2px 2px 2px;
-    margin-top: 20px;
-    font-weight: bold;
-    border-radius: 10px;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-family: 'Ysabeau SC', sans-serif;
 }
 
 button {
-    background-color: #007BFF;
+    background-color: #ff9898;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -95,56 +104,24 @@ button {
     cursor: pointer;
     font-size: 20px;
     margin: 20px 20px;
-    --glow-color: #9dd1ff; 
-    position: relative;
-    isolation: isolate;    
-    overflow: visible;
-    transition: transform .2s ease, box-shadow .3s ease, background-color .2s ease;
-    
+    font-family: 'Federo', sans-serif;
+    font-weight: bold;
+    transition: background-color 300ms ease, box-shadow 300ms ease;
 }
 
 button:hover {
-    background-color: #0056b3;
-    box-shadow:
-        0 0 0 1px color-mix(in oklab, var(--glow-color), white 70%) inset,
-        0 6px 20px -6px rgba(0, 0, 0, 0.4),
-        0 0 24px var(--glow-color);
-    transform: translateY(-1px);    
+    background-color: #ff8d8d;
+    box-shadow: 0 0 2px rgba(255, 73, 73, 0.7);
 }
 
-button::before {
-    background: radial-gradient(60% 80% at 50% 120%, var(--glow-color) 0%, transparent 60%);
-    filter: blur(12px);
-    transform: scale(0.98);
-}
-
-button::after {
-    inset: -8px;
-    background: conic-gradient(
-        from 0deg at 50% 50%,
-        transparent 0 15%,
-        var(--glow-color) 15% 35%,
-        transparent 35% 50%,
-        var(--glow-color) 50% 65%,
-        transparent 65% 85%,
-        var(--glow-color) 85% 100%
-    );
-    filter: blur(18px);
-    transform: scale(0.95);
-    z-index: -2;
-}
-
-button:hover::before, 
-button:hover::after {
-    opacity: 1;
-    transform: scale(1);
-}
 
 flash p.success {
     color: green;
     font-style: italic;
     font-size: 15px;
     margin: 20px 0;
+    text-align: center;
+    font-family: 'Mitr', sans-serif;
 }
 
 flash p.error {
@@ -152,23 +129,26 @@ flash p.error {
     font-style: italic;
     font-size: 15px;
     margin: 20px 0;
+    text-align: center;
+    font-family: 'Mitr', sans-serif;
 }
 
 table {
     width: 80%;
     margin: 20px auto;
     border-collapse: collapse;
+    text-align: center;
 }
 
 th {
-    background-color:#0056b3;
+    background-color:#e48080;
     color: white;
     font-size: 18px;
     padding: 10px;
     text-align: center;
     border-left: 4px solid #ddd;
     border-right: 4px solid #ddd;
-    border-top: #0056b3 4px solid;
+    border-top: #e49999 4px solid;
 }
 
 td {
@@ -185,9 +165,17 @@ input {
     box-sizing: border-box;
     border: 1px solid #ccc;
     border-radius: 4px;
+    font-size: 16px;
 }
 
 a:hover {
-    color: #0056b3;
-    --glow-color: #9dd1ff;
+    color: #c42020;
+    --glow-color: #a03535;
+}
+
+.no-progress {
+    cursor: not-allowed;
+    opacity: 0.6;
+    font-size: 15px;
+    text-align: center;
 }

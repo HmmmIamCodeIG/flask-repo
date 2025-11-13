@@ -2,7 +2,9 @@
 {% block title %}Register - Smart Study Quiz App{% endblock %}
 {% block heading %}Register{% endblock %}
 {% block content %}
+<div class="heading">
     <p>REGISTER!</p>
+</div>
     <form method="POST" action="{{ url_for('register') }}">
         <p>Username
         <input type="text" name="username" placeholder="Username" required></p>
