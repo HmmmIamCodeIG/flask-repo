@@ -167,7 +167,16 @@ input {
     border-radius: 4px;
     font-size: 16px;
     font-family: 'Ysabeau SC', sans-serif;
+}
 
+input:focus {
+    border-color: #ff7b7b;
+    outline: none;
+}
+
+.large-input input {
+    height: 100px;
+    padding: 90px 10px;
 }
 
 a:hover {
