@@ -26,7 +26,7 @@ class User(UserMixin):
 def load_user(user_id):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, username, hashed_password FROM Users WHERE id = ?", (int(user_id),))
+    cursor.execute("SELECT id, username, hashed_password FROM Users WHERE id = ?", (user_id,))
     row = cursor.fetchone()
     conn.close()
     if row:
@@ -59,10 +59,9 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        # Insecure: Plain-text password comparison
+        # Fetch user from database (using parameterized query to avoid SQL injection)
         conn = get_db_connection()
         cursor = conn.cursor()
-
         cursor.execute("SELECT id, username, hashed_password FROM Users WHERE username = ?", (username,))
         user = cursor.fetchone()
         conn.close()
@@ -90,6 +89,8 @@ def logout():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
+    # Registration logic
+    # on POST, get form data and insert new user into database
     if request.method == 'POST':
         username = request.form['username']
         displayName = request.form['display_name']
