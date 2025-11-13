@@ -19,12 +19,12 @@ header {
 }
 
 .heading p {
-    font-size: 40px;
+    font-size: 20px;
     font-weight: bold;
     margin: 20px;
-    padding: 20px 10px;
+    padding: 10px 10px;
     text-align: center;
-    font-family: 'Matangi', sans-serif;
+    font-family: 'cal Sans', sans-serif;
 }
 
 nav, .navbar {
@@ -33,14 +33,14 @@ nav, .navbar {
     justify-content: center;
     padding: 10px 0;
     background-color: #ffb4b4bd;
-    font-family: 'Bondoni Moda SC', serif;
+    font-family: 'Ysabeau SC', sans-serif;
 }
 
 .logout-button a {
     position: absolute;
     top: 10px;
     right: 10px;
-    font-family: 'Bondoni Moda SC', serif;
+    font-family: 'Ysabeau SC', sans-serif;
     color: white;
 }
 
@@ -91,7 +91,7 @@ form {
     display: flex;
     flex-direction: column;
     font-size: 20px;
-    font-weight: normal;
+    font-weight: bold;
     font-family: 'Ysabeau SC', sans-serif;
 }
 
@@ -104,7 +104,7 @@ button {
     cursor: pointer;
     font-size: 20px;
     margin: 20px 20px;
-    font-family: 'Federo', sans-serif;
+    font-family: 'Ysabeau SC', sans-serif;
     font-weight: bold;
     transition: background-color 300ms ease, box-shadow 300ms ease;
 }
@@ -166,6 +166,8 @@ input {
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 16px;
+    font-family: 'Ysabeau SC', sans-serif;
+
 }
 
 a:hover {
