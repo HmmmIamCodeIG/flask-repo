@@ -138,6 +138,8 @@ table {
     margin: 20px auto;
     border-collapse: collapse;
     text-align: center;
+    font-family: 'Ysabeau SC', sans-serif;
+
 }
 
 th {
@@ -189,4 +191,10 @@ a:hover {
     opacity: 0.6;
     font-size: 15px;
     text-align: center;
+}
+
+img {
+    width: 160px;
+    display: block;
+    margin: 20px auto;
 }
