@@ -181,5 +181,12 @@ def view_progress():
     # display all posts if user has - dynamic
     return render_template('viewProgress.html', posts = posts)
 
+@app.route('/quizzes', methods=['GET', 'POST'])
+@login_required
+def quizzes():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('quizzes.html')
+
 if __name__ == '__main__':
     app.run(debug=True)

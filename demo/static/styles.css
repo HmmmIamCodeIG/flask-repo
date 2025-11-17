@@ -24,7 +24,7 @@ header {
     margin: 20px;
     padding: 10px 10px;
     text-align: center;
-    font-family: 'cal Sans', sans-serif;
+    font-family: 'Ysabeau SC', sans-serif;
 }
 
 nav, .navbar {
@@ -33,14 +33,15 @@ nav, .navbar {
     justify-content: center;
     padding: 10px 0;
     background-color: #ffb4b4bd;
-    font-family: 'Ysabeau SC', sans-serif;
+    font-family: 'Cal Sans', sans-serif;
+    font-weight: none;
 }
 
 .logout-button a {
     position: absolute;
     top: 10px;
     right: 10px;
-    font-family: 'Ysabeau SC', sans-serif;
+    font-family: 'Cal Sans', sans-serif;
     color: white;
 }
 
@@ -194,6 +195,8 @@ a:hover {
 }
 
 img {
-    width: 100px;
-    height: 100px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
 }
