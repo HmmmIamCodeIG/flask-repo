@@ -5,7 +5,41 @@ from flask_login import login_required, LoginManager, UserMixin, login_user, log
 from datetime import date
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'super-secret-key'  # For sessions and flash messages
+app.config['SECRET_KEY'] = 'super-secret-key'  
+# For sessions and flash messages
+
+QUIZ = [
+    {
+        "question": "What is the derivative of x^2?",
+        "options": ["2x", "x", "x^2", "1"],
+        "answer": "2x"
+    },
+    {
+        "question": "What is the integral of 1/x?",
+        "options": ["ln|x| + C", "1/x^2 + C", "x + C", "e^x + C"],
+        "answer": "ln|x| + C"
+    },
+    {
+        "question": "What is the value of 7 * 8?",
+        "options": ["54", "56", "64", "58"],
+        "answer": "56"
+    },
+    {
+        "question": "Solve for x: 2x + 3 = 11",
+        "options": ["3", "4", "5", "6"],
+        "answer": "4"
+    },
+    {
+        "question": "What is the area of a circle with radius r?",
+        "options": ["2πr", "πr^2", "πr", "r^2"],
+        "answer": "πr^2"
+    },
+    {
+        "question": "What is the square root of 144?",
+        "options": ["10", "11", "12", "14"],
+        "answer": "12"
+    }
+]
 
 # initialise flask-login
 login_manager = LoginManager()
@@ -184,9 +218,16 @@ def view_progress():
 @app.route('/quizzes', methods=['GET', 'POST'])
 @login_required
 def quizzes():
+    feedback = None
+    user_answers = []
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return render_template('quizzes.html')
+    if request.method == 'POST':
+        user_answers = [request.form.get(f"answer{i}") for i in range(len(QUIZ))]
+        feedback = [
+            (ans == q["answer"]) for ans, q in zip(user_answers, QUIZ)
+        ]
+    return render_template('quizzes.html', quiz=QUIZ, feedback=feedback, user_answers=user_answers)
 
 if __name__ == '__main__':
     app.run(debug=True)
