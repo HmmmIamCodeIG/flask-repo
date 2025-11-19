@@ -1,0 +1,39 @@
+Find the magnitude of vector 3i minus 4j, 5, 5, 4, 3, sqrt7, Vectors-Year11
+
+Find the unit vector in the direction of 2i plus 5j, (2i+5j)/sqrt29, (2i+5j)/sqrt29, (5i+2j)/sqrt29, (2i+5j)/7, (i+j)/sqrt2, Vectors-Year11
+
+Calculate the dot product of vector 4i plus j and vector 2i minus 3j, 5, 5, 2, -10, 7, Vectors-Year11
+
+Determine the angle between vectors i plus j and i minus j, 90 degrees, 90 degrees, 45 degrees, 60 degrees, 120 degrees, Vectors-Year11
+
+Find the vector projection of 3i plus 4j onto i, 3i, 3i, 4i, i, (3i+4j)/2, Vectors-Year11
+
+Solve exponential equation 3 to the power x equals 81, 4, 4, 3, 2, 5, Exponentials-Year11
+
+Simplify e to the power a times e to the power b, e^(a+b), e^(a+b), e^(ab), e^(a-b), e^(a+b)/2, Exponentials-Year11
+
+If a vector has magnitude 10 and direction 30 degrees find its i component, 10 cos 30, 10 cos 30, 10 sin 30, 5, 10, Vectors-Year11
+
+Find the magnitude of vector minus 6i plus 8j, 10, 10, 14, 6, 8, Vectors-Year11
+
+Solve exponential equation loge x equals 3, e^3, e^3, 3e, e^2, e, Exponentials-Year11
+
+Find the dot product of vectors 7i minus j and 2i plus j, 13, 13, 15, 5, 7, Vectors-Year11
+
+Find the angle between vectors 2i and 3j, 90 degrees, 90 degrees, 0 degrees, 45 degrees, 180 degrees, Vectors-Year11
+
+Solve 5 times 2 to the power x equals 40, 3, 3, 4, 2, 5, Exponentials-Year11
+
+Simplify the expression e to the power x divided by e to the power 2x, e^-x, e^-x, e^x, e^(3x), x e^-1, Exponentials-Year11
+
+Find the unit vector of vector minus 8i minus 6j, (-8i-6j)/10, (-8i-6j)/10, (-4i-3j)/5, (-8i-6j)/14, (8i+6j)/10, Vectors-Year11
+
+Calculate magnitude of vector 5i minus 12j, 13, 13, 17, 12, 5, Vectors-Year11
+
+Solve exponential equation 9 to the power x equals 27, 1.5, 1.5, 3, 2, 4, Exponentials-Year11
+
+Evaluate loge e^7, 7, 7, e, 1, 0, Exponentials-Year11
+
+Find dot product of vectors i minus 2j and minus 3i plus j, -5, -5, -1, 1, 5, Vectors-Year11
+
+Determine magnitude of vector 2i plus 2j plus 1k, 3, 3, sqrt5, 5, 7, Vectors-Year11

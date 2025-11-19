@@ -1,45 +1,13 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from flask_login import login_required, LoginManager, UserMixin, login_user, logout_user, current_user
 from datetime import date
 
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret-key'  
 # For sessions and flash messages
-
-QUIZ = [
-    {
-        "question": "What is the derivative of x^2?",
-        "options": ["2x", "x", "x^2", "1"],
-        "answer": "2x"
-    },
-    {
-        "question": "What is the integral of 1/x?",
-        "options": ["ln|x| + C", "1/x^2 + C", "x + C", "e^x + C"],
-        "answer": "ln|x| + C"
-    },
-    {
-        "question": "What is the value of 7 * 8?",
-        "options": ["54", "56", "64", "58"],
-        "answer": "56"
-    },
-    {
-        "question": "Solve for x: 2x + 3 = 11",
-        "options": ["3", "4", "5", "6"],
-        "answer": "4"
-    },
-    {
-        "question": "What is the area of a circle with radius r?",
-        "options": ["2πr", "πr^2", "πr", "r^2"],
-        "answer": "πr^2"
-    },
-    {
-        "question": "What is the square root of 144?",
-        "options": ["10", "11", "12", "14"],
-        "answer": "12"
-    }
-]
 
 # initialise flask-login
 login_manager = LoginManager()
@@ -220,14 +188,40 @@ def view_progress():
 def quizzes():
     feedback = None
     user_answers = []
+    questions = []
+    # Load quiz questions from file
+    with open('math_quizzes.txt', 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            parts = [item.strip() for item in line.split(',')]
+            # skip blank lines or malformed questions
+            if len(parts) < 7:  # should have at least question, correct, 5 choices, topic
+                continue
+            question_text = parts[0]
+            correct_answer = parts[1]
+            choices = parts[2:7]
+            topic = parts[7] if len(parts) > 7 else ''
+            questions.append({
+                "text": question_text,
+                "correct": correct_answer,
+                "choices": choices,
+                "topic": topic
+            })
     if 'user_id' not in session:
         return redirect(url_for('login'))
     if request.method == 'POST':
-        user_answers = [request.form.get(f"answer{i}") for i in range(len(QUIZ))]
-        feedback = [
-            (ans == q["answer"]) for ans, q in zip(user_answers, QUIZ)
-        ]
-    return render_template('quizzes.html', quiz=QUIZ, feedback=feedback, user_answers=user_answers)
+        # Get answers from form
+        for i in range(len(questions)):
+            answer = request.form.get(f'question_{i}', '')
+            user_answers.append(answer)
+        # Score answers
+        correct = 0
+        for i, q in enumerate(questions):
+            if i < len(user_answers) and user_answers[i] == q['correct']:
+                correct += 1
+        feedback = f"You got {correct} correct out of {len(questions)}!"
+    
+    return render_template('quizzes.html', feedback=feedback, user_answers=user_answers, questions=questions)
 
 if __name__ == '__main__':
     app.run(debug=True)

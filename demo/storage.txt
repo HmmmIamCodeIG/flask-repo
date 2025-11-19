@@ -1,0 +1,58 @@
+
+QUIZ = [
+    {
+        "question": "What is the derivative of x^2?",
+        "options": ["2x", "x", "x^2", "1"],
+        "answer": "2x"
+    },
+    {
+        "question": "What is the integral of 1/x?",
+        "options": ["ln|x| + C", "1/x^2 + C", "x + C", "e^x + C"],
+        "answer": "ln|x| + C"
+    },
+    {
+        "question": "What is the value of 7 * 8?",
+        "options": ["54", "56", "64", "58"],
+        "answer": "56"
+    },
+    {
+        "question": "Solve for x: 2x + 3 = 11",
+        "options": ["3", "4", "5", "6"],
+        "answer": "4"
+    },
+    {
+        "question": "What is the area of a circle with radius r?",
+        "options": ["2πr", "πr^2", "πr", "r^2"],
+        "answer": "πr^2"
+    },
+    {
+        "question": "What is the square root of 144?",
+        "options": ["10", "11", "12", "14"],
+        "answer": "12"
+    }
+]
+
+
+@app.route('/quizzes', methods=['GET', 'POST'])
+@login_required
+def quizzes():
+    feedback = None
+    user_answers = []
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        # connect to math_quizzes.txt and get questions
+        with open('math_quizzes.txt', 'r') as f:
+            lines = f.readlines()
+            questions = [line.strip().split(', ') for line in lines]
+        # get user answers from form
+        for i in range(len(questions)):
+            answer = request.form.get(f'question_{i}')
+            user_answers.append(answer)
+        # calculate feedback
+        correct_count = 0
+        for i in range(len(questions)):
+            if user_answers[i] == questions[i][1]:
+                correct_count += 1
+        feedback = f'You got {correct_count} out of {len(questions)} correct!'
+    return render_template('quizzes.html', feedback=feedback, user_answers=user_answers)

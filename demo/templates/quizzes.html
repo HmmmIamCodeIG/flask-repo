@@ -1,8 +1,28 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard - Smart Study Quiz App{% endblock %}
-{% block heading %}Dashboard{% endblock %}
+{% block title %}Quizzes{% endblock %}
+{% block heading %}Quizzes{% endblock %}
 {% block content %} 
 <div class="heading">
     <p>HOORAY!!!</p>
 </div>
+{% if feedback %}
+    <div class="feedback">
+        <strong>{{ feedback }}</strong>
+    </div>
+{% endif %}
+<form method="post">
+    {% for question in questions %}
+        <div class="question-block">
+            <p>Q{{ loop.index }}:{{ question.text }}</p>
+            {% for choice in question.choices %}
+                <label>
+                    <input type="radio" name="question_{{ loop.index0 }}" value="{{ choice }}" {% if user_answers and user_answers[loop.index0]==choice %}checked{% endif %}>
+                    {{ choice }}
+                </label>
+            {% endfor %}
+        </div>
+        <hr>
+    {% endfor %}
+    <button type="submit">Submit Answers</button>
+</form>
 {% endblock %}
