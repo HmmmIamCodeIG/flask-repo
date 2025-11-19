@@ -143,6 +143,7 @@ flash p.error {
 }
 
 /* Table specific CSS */
+
 table {
     width: 80%;
     margin: 20px auto;
@@ -179,7 +180,7 @@ input {
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 16px;
-    font-family: 'Ysabeau SC', sans-serif;
+    font-family: 'Vend Sans', sans-serif;
 }
 
 input:focus {
@@ -199,7 +200,7 @@ textarea.large-input {
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 16px;
-    font-family: 'Ysabeau SC', sans-serif;
+    font-family: 'Vend Sans', sans-serif;
     resize: vertical;
     min-height: 100px;
 }
@@ -291,3 +292,4 @@ input[type="radio"]:checked + label {
     color: #fff;
     border: 2.5px solid #910d0d;
 }
+
