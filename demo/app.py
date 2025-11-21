@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+import sqlite3, random
 from flask_login import login_required, LoginManager, UserMixin, login_user, logout_user, current_user
 from datetime import date
 
@@ -26,8 +26,11 @@ class User(UserMixin):
 # load user from database
 @login_manager.user_loader
 def load_user(user_id):
+    # fetch user from database
     conn = get_db_connection()
     cursor = conn.cursor()
+    # secure way using parameterised queries
+    # fetch user from database using parameterised query to avoid SQL injection
     cursor.execute("SELECT id, username, hashed_password FROM Users WHERE id = ?", (user_id,))
     row = cursor.fetchone()
     conn.close()
@@ -38,7 +41,8 @@ def load_user(user_id):
 # Database connection function
 def get_db_connection():
     conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row  # Allows accessing columns by name
+    conn.row_factory = sqlite3.Row  
+    # Allows accessing columns by name
     return conn
 
 @app.route('/')
@@ -61,15 +65,26 @@ def login():
         username = request.form['username']
         password = request.form['password']
 
-        # Fetch user from database (using parameterized query to avoid SQL injection)
+        # insecure way (vulnerable to SQL injection) for demonstration purposes only
+        '''conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT id, username, password FROM Users WHERE username = '{username}'")
+        user = cursor.fetchone()
+        conn.close()'''
+        # vulnerable to SQL injection as it directly inserts user input into the SQL quer
+
+        # secure way using parameterised queries
+        # fetch user from database using parameterised query to avoid SQL injection
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT id, username, hashed_password FROM Users WHERE username = ?", (username,))
         user = cursor.fetchone()
         conn.close()
 
+        # verify password
         if user and check_password_hash(user['hashed_password'], password):
             session['user_id'] = user['id']
+            # keep flask-login and session in sync
             login_user(User(id=user['id'], username=user['username'], hashed_password=user['hashed_password']))
             flash('Login successful!', 'success')
             return redirect(url_for('dashboard'))
@@ -82,7 +97,9 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    # keep flask-login and session in sync
     logout_user()
+    # clear session
     session.pop('user_id', None)
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
@@ -99,15 +116,19 @@ def register():
         email = request.form['email']
         password = request.form['password']
         confirmPassword = request.form['confirm_password']
-
+        
+        # secure way using parameterised queries
         conn = get_db_connection()
         cursor = conn.cursor()
 
         if password != confirmPassword:
             flash('Passwords do not match', 'error')
             return redirect(url_for('register'))
-        try:
+        try:       
+            # secure way using parameterised queries
+            # plaintext passwords are insecure
             hashed_pw = generate_password_hash(password)
+            # inserted_password = password  
             cursor.execute(
                 "INSERT INTO Users (username, hashed_password, email, display_name) VALUES (?, ?, ?, ?)",
                 (username, hashed_pw, email, displayName)
@@ -115,18 +136,26 @@ def register():
             conn.commit()
             cursor.execute("SELECT id, username, hashed_password FROM Users WHERE username = ?", (username,))
             user = cursor.fetchone()
+            # insecure way (vulnerable to SQL injection) for demonstration purposes only
+            '''cursor.execute(
+                f"INSERT INTO Users (username, password, email, display_name) VALUES ('{username}', '{password}', '{email}', '{displayName}')"
+            )'''
+            # this is insecure as it directly inserts user input into the SQL query, allowing for SQL injection
 
             # keep flask-login and session in sync
             login_user(User(id=user['id'], username=user['username'], hashed_password=user['hashed_password']))
             session['user_id'] = user['id']
 
+            # success
             flash('Registration successful!', 'success')
             conn.close()
             return redirect(url_for('dashboard'))
+        # username or email already exists
         except sqlite3.IntegrityError:
             conn.close()
             flash('Username or email already exists', 'error')
             return redirect(url_for('register'))
+        # other errors
         except Exception as e:
             conn.close()
             flash(f'Error: {str(e)}', 'error')
@@ -137,8 +166,6 @@ def register():
 @app.route('/add_progress', methods=['GET', 'POST'])
 @login_required
 def add_progress():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
     if request.method == 'POST':
         date = request.form['date']
         title = request.form['title']
@@ -148,18 +175,25 @@ def add_progress():
         cursor = conn.cursor()
 
         try:
-            # Using parameterized query to avoid SQL injection
+            # Using parameterised query to avoid SQL injection
             cursor.execute(
                 f"INSERT INTO ProgressLogs (user_id, date, title, details) VALUES (?, ?, ?, ?)",
                 (session['user_id'], date, title, details)
             )
+            # insecure way (vulnerable to SQL injection) for demonstration purposes only
+            '''cursor.execute(
+                f"INSERT INTO ProgressLogs (user_id, date, title, details) VALUES ({session['user_id']}, '{date}', '{title}', '{details}')"
+            )'''
+            # this is insecure as it directly inserts user input into the SQL query, allowing for SQL injection
             conn.commit()
             flash('Progress log added successfully!', 'success')
-            return redirect(url_for('dashboard'))  # Redirect after successful insert
+            return redirect(url_for('dashboard'))  
+        # incomplete form data
         except sqlite3.IntegrityError:
             conn.close()
             flash('Please enter a complete log.', 'error')
             return redirect(url_for('add_progress'))
+        # other errors
         except Exception as e:
             conn.close()
             flash(f'Error: {str(e)}', 'error')
@@ -176,7 +210,8 @@ def view_progress():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    cursor.execute('SELECT * FROM ProgressLogs WHERE user_id = ? ORDER BY date DESC', (session["user_id"],))
+    # fetch all progress logs for the logged-in user
+    cursor.execute('SELECT * FROM ProgressLogs WHERE user_id = ? ORDER BY date ASC', (session["user_id"],))
     posts = cursor.fetchall()
     conn.close()
     # display no posts, if user has none 
@@ -186,42 +221,50 @@ def view_progress():
 @app.route('/quizzes', methods=['GET', 'POST'])
 @login_required
 def quizzes():
-    feedback = None
+    feedback = ''
     user_answers = []
     questions = []
-    # Load quiz questions from file
-    with open('math_quizzes.txt', 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            parts = [item.strip() for item in line.split(',')]
-            # skip blank lines or malformed questions
-            if len(parts) < 7:  # should have at least question, correct, 5 choices, topic
-                continue
-            question_text = parts[0]
-            correct_answer = parts[1]
-            choices = parts[2:7]
-            topic = parts[7] if len(parts) > 7 else ''
-            questions.append({
-                "text": question_text,
-                "correct": correct_answer,
-                "choices": choices,
-                "topic": topic
-            })
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
+    try:
+        # read quiz questions from text file
+        with open('math_quizzes.txt', 'r') as f:
+            for raw in f:
+                line = raw.strip()
+                if not line:
+                    continue
+                # parse question line - format: question, correct_answer, choice1, choice2, ..., topic
+                # strip whitespace and ignore empty parts
+                parts = [p.strip() for p in line.split(',') if p.strip()]
+                question_text = parts[0] # first part is question
+                correct_answer = parts[1] # second part is correct answer
+                choices = parts[2:-1] # all parts except first, second and last are choices
+                # shuffle choices to randomise order
+                random.shuffle(choices)
+                questions.append({
+                    "text": question_text,
+                    "correct": correct_answer,
+                    "choices": choices,
+                })
+    # no quiz file found
+    except FileNotFoundError:
+        flash('no file found.', 'error')
+    # other errors
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+    # process submitted answers
     if request.method == 'POST':
-        # Get answers from form
         for i in range(len(questions)):
-            answer = request.form.get(f'question_{i}', '')
-            user_answers.append(answer)
-        # Score answers
-        correct = 0
-        for i, q in enumerate(questions):
-            if i < len(user_answers) and user_answers[i] == q['correct']:
-                correct += 1
+            # get user's answer for each question
+            user_answers.append(request.form.get(f'question_{i}', '').strip())
+        # calculate score of correct answers
+        correct = sum(1 for i, q in enumerate(questions)
+                      # check if user's answer matches the correct answer
+                      if i < len(user_answers) and user_answers[i] == q['correct'])
+        # provide back to user how they did
         feedback = f"You got {correct} correct out of {len(questions)}!"
-    
-    return render_template('quizzes.html', feedback=feedback, user_answers=user_answers, questions=questions)
+    return render_template('quizzes.html',
+                           feedback=feedback,
+                           user_answers=user_answers,
+                           questions=questions)
 
 if __name__ == '__main__':
     app.run(debug=True)

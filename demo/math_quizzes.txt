@@ -36,4 +36,4 @@ Evaluate loge e^7, 7, 7, e, 1, 0, Exponentials-Year11
 
 Find dot product of vectors i minus 2j and minus 3i plus j, -5, -5, -1, 1, 5, Vectors-Year11
 
-Determine magnitude of vector 2i plus 2j plus 1k, 3, 3, sqrt5, 5, 7, Vectors-Year11
+Determine magnitude of vector 2i plus 2j plus 1k, 3, 3, , 5, 7, Vectors-Year11

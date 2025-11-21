@@ -226,7 +226,7 @@ img {
 
 /* Quizz specific CSS */
 
-feedback {
+.feedback {
     background: #ffeaea;
     color: #ef3030;
     border-left: 7px solid #ef3030;
@@ -254,27 +254,35 @@ feedback {
     margin-bottom: 12px;
 }
 
-label {
-    cursor: pointer;
+.option-label {
     display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    font-size: 16px;
-    font-family: 'Mitr',sans-serif;
-    color: #444;
+    position: relative;
+    padding: 12px 16px;
+    margin: 8px 0;
+    border: 2px solid #ee6c6c;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: pointer;
+    font-family: 'Ysabeau SC', sans-serif;
+    transition: background .25s, box-shadow .25s, border-color .25s;
+}
+
+.option-label:hover {
     background: #fff3f3;
-    padding: 6px 8px;
-    border-radius: 4px;
-    transition: background 150ms ease;
 }
 
-label:hover, input[type="radio"]:focus + label {
-    background: #ffd9d9;
+.option-label input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    margin: 0;
 }
 
-input[type="radio"] {
-    margin-right: 10px;
-    accent-color: #ee6c6c;
+.option-label:has(input:checked) { 
+    background: #f4a0a0;
+    border-color: #ed4b4b;
+    box-shadow: 0 0 0 3px rgba(238,108,108,0.25);
 }
 
 hr {
@@ -282,14 +290,3 @@ hr {
     border-top: 1.5px solid #ee6c6c;
     margin: 14px 0 20px 0;
 }
-
-input[type="radio"] {
-    display: none; 
-}
-
-input[type="radio"]:checked + label {
-    background: #ee6c6c;
-    color: #fff;
-    border: 2.5px solid #910d0d;
-}
-

@@ -5,24 +5,36 @@
 <div class="heading">
     <p>HOORAY!!!</p>
 </div>
+
 {% if feedback %}
     <div class="feedback">
-        <strong>{{ feedback }}</strong>
+        {{ feedback }}
     </div>
 {% endif %}
+
 <form method="post">
     {% for question in questions %}
+        {% set qindex = loop.index0 %}   
         <div class="question-block">
-            <p>Q{{ loop.index }}:{{ question.text }}</p>
+            <!-- Display question text -->
+            <p>Q{{ loop.index }}: {{ question.text }}</p>
             {% for choice in question.choices %}
-                <label>
-                    <input type="radio" name="question_{{ loop.index0 }}" value="{{ choice }}" {% if user_answers and user_answers[loop.index0]==choice %}checked{% endif %}>
-                    {{ choice }}
-                </label>
+            <label class="option-label">
+                <!-- Display choice text -->
+                <input 
+                    type="radio"
+                    name="question_{{ qindex }}"  
+                    value="{{ choice }}"
+                    class="option-input"
+                    {% if user_answers and user_answers[qindex] == choice %}checked{% endif %}>
+                    <!-- Radio button for choice -->
+                <span class="option-text">{{ choice }}</span>
+            </label>
             {% endfor %}
         </div>
         <hr>
     {% endfor %}
     <button type="submit">Submit Answers</button>
 </form>
+<script src="{{ url_for('static', filename='quiz.js') }}"></script>
 {% endblock %}
