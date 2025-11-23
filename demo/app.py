@@ -260,23 +260,10 @@ def quizzes():
                             user_answers=user_answers,
                             questions=questions)
 
-@app.route('/quizzes', methods=['GET', 'POST'])
+@app.route('/quizzesMenu', methods=['GET', 'POST'])
 @login_required
-def quizzesResult():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+def quizzesMenu():
+    return render_template('quizzesMenu.html')
 
-    # fetch all progress logs for the logged-in user
-    cursor.execute('SELECT * FROM TestResults WHERE user_id = ? ORDER BY date ASC', (session["user_id"],))
-    posts = cursor.fetchall()
-    conn.close()
-    # display no posts, if user has none 
-    # display all posts if user has - dynamic
-    return render_template('quizzesResult.html', posts = posts)
-
-
-# store quiz results in the database
-
-    
 if __name__ == '__main__':
     app.run(debug=True)

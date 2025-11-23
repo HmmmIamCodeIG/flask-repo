@@ -18,7 +18,9 @@ CREATE TABLE IF NOT EXISTS ProgressLogs (
 CREATE TABLE IF NOT EXISTS TestResults (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    score INTEGER NOT NULL   
+    score INTEGER NOT NULL,
+    total_questions INTEGER NOT NULL,
+    date TEXT NOT NULL
 );
 
 -- sqlite3 database.db ".read schema.sql"

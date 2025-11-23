@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Quiz Select - Smart Study Quiz App{% endblock %}
+{% block heading %}Quiz Select{% endblock %}
+{% block content %}
+<div class="heading">
+    <p>Select the Quiz you wish to take</p>
+</div>
+<form method="POST" action="{{ url_for('quizzes1') }}">
+    <button type="submit">Geography-Year11</button>
+</form>
+{% endblock %}

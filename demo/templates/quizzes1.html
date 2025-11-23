@@ -2,20 +2,12 @@
 {% block title %}Quizzes{% endblock %}
 {% block heading %}Quizzes{% endblock %}
 {% block content %} 
-<div class="heading">
-    <p>HOORAY!!!</p>
-</div>
-
 {% if feedback %}
     <div class="feedback">
         {{ feedback }}
     </div>
 {% endif %}
-
 <form method="post">
-    {% for selected_quizzes in selected_quizzes %}
-        <h2>{{ selected_quizzes.topic }} Quiz</h2>
-    {% endfor %}
     {% for question in questions %}
         {% set qindex = loop.index0 %}   
         <div class="question-block">
