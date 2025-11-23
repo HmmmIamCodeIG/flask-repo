@@ -1,3 +1,4 @@
+// Allow radio buttons to be unselected by clicking again
 document.addEventListener("DOMContentLoaded", () => {
     const radios = document.querySelectorAll('input[type="radio"]');
 
@@ -10,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // If this radio was already checked, uncheck it
             if (radio.dataset.waschecked === "true") {
                 radio.checked = false;
+                // Mark as unchecked
                 radio.dataset.waschecked = "false";
                 radio.classList.add("temp-unchecked");
                 return;
@@ -18,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
             groupRadios.forEach(r => {
                 r.dataset.waschecked = "false";
                 r.classList.remove("temp-unchecked");
+                // Remove temporary unchecked class
             });
             radio.dataset.waschecked = "true";
         });

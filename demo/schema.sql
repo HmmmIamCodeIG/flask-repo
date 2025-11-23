@@ -15,4 +15,10 @@ CREATE TABLE IF NOT EXISTS ProgressLogs (
     image_path TEXT
 );
 
+CREATE TABLE IF NOT EXISTS TestResults (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    score INTEGER NOT NULL   
+);
+
 -- sqlite3 database.db ".read schema.sql"

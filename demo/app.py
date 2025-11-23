@@ -46,11 +46,6 @@ def get_db_connection():
     return conn
 
 @app.route('/')
-def index():
-    # return 'Index page'
-    return render_template('dashboard.html')
-
-@app.route('/dashboard')
 @login_required
 def dashboard():
     '''if 'user_id' not in session:
@@ -202,11 +197,8 @@ def add_progress():
     return render_template('addProgress.html')
 
 @app.route('/view_progress', methods=['GET', 'POST'])
+@login_required
 def view_progress():
-    if 'user_id' not in session:
-        flash("Please log in to view your progress.", 'error')
-        return redirect(url_for('login'))
-    
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -224,26 +216,28 @@ def quizzes():
     feedback = ''
     user_answers = []
     questions = []
+    # user selects which quiz to take
+    selected_quiz = request.form.get('quiz') if request.method == 'POST' else None
     try:
-        # read quiz questions from text file
-        with open('math_quizzes.txt', 'r') as f:
-            for raw in f:
-                line = raw.strip()
-                if not line:
-                    continue
-                # parse question line - format: question, correct_answer, choice1, choice2, ..., topic
-                # strip whitespace and ignore empty parts
-                parts = [p.strip() for p in line.split(',') if p.strip()]
-                question_text = parts[0] # first part is question
-                correct_answer = parts[1] # second part is correct answer
-                choices = parts[2:-1] # all parts except first, second and last are choices
-                # shuffle choices to randomise order
-                random.shuffle(choices)
-                questions.append({
-                    "text": question_text,
-                    "correct": correct_answer,
-                    "choices": choices,
-                })
+        if selected_quiz:
+            # read quiz questions from selected file
+            with open(f'{selected_quiz}_quizzes.txt', 'r') as f:
+                for raw in f:
+                    line = raw.strip()
+                    if not line:
+                        continue
+                    # strip whitespace and ignore empty parts
+                    parts = [p.strip() for p in line.split(',') if p.strip()]
+                    question_text = parts[0] # first part is question
+                    correct_answer = parts[1] # second part is correct answer
+                    choices = parts[2:-1] # all parts except first, second and last are choices
+                    # shuffle choices to randomise order
+                    random.shuffle(choices)
+                    questions.append({
+                        "text": question_text,
+                        "correct": correct_answer,
+                        "choices": choices,
+                    })
     # no quiz file found
     except FileNotFoundError:
         flash('no file found.', 'error')
@@ -257,14 +251,32 @@ def quizzes():
             user_answers.append(request.form.get(f'question_{i}', '').strip())
         # calculate score of correct answers
         correct = sum(1 for i, q in enumerate(questions)
-                      # check if user's answer matches the correct answer
-                      if i < len(user_answers) and user_answers[i] == q['correct'])
+                        # check if user's answer matches the correct answer
+                        if i < len(user_answers) and user_answers[i] == q['correct'])
         # provide back to user how they did
         feedback = f"You got {correct} correct out of {len(questions)}!"
     return render_template('quizzes.html',
-                           feedback=feedback,
-                           user_answers=user_answers,
-                           questions=questions)
+                            feedback=feedback,
+                            user_answers=user_answers,
+                            questions=questions)
 
+@app.route('/quizzes', methods=['GET', 'POST'])
+@login_required
+def quizzesResult():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # fetch all progress logs for the logged-in user
+    cursor.execute('SELECT * FROM TestResults WHERE user_id = ? ORDER BY date ASC', (session["user_id"],))
+    posts = cursor.fetchall()
+    conn.close()
+    # display no posts, if user has none 
+    # display all posts if user has - dynamic
+    return render_template('quizzesResult.html', posts = posts)
+
+
+# store quiz results in the database
+
+    
 if __name__ == '__main__':
     app.run(debug=True)
