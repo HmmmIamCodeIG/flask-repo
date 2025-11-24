@@ -2,9 +2,7 @@
 {% block title %}Login - Smart Study Quiz App{% endblock %}
 {% block heading %}Login{% endblock %}
 {% block content %}
-<div class="heading">
-    <p>ENTER LOGIN DETAILS</p>
-</div>
+<h2>ENTER LOGIN DETAILS</h2>
     <form method="POST" action="{{ url_for('login') }}">
         <p>Username</p>
         <input type="text" id="username" name="username" placeholder="Username" required>

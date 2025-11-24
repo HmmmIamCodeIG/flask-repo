@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3, random
+import sqlite3, random, os
 from flask_login import login_required, LoginManager, UserMixin, login_user, logout_user, current_user
 from datetime import date
 
@@ -217,7 +217,7 @@ def quizzes():
     user_answers = []
     questions = []
     # user selects which quiz to take
-    selected_quiz = request.form.get('quiz') if request.method == 'POST' else None
+    selected_quiz = request.form.get('quiz') or request.args.get('quiz')
     try:
         if selected_quiz:
             # read quiz questions from selected file
@@ -260,10 +260,28 @@ def quizzes():
                             user_answers=user_answers,
                             questions=questions)
 
-@app.route('/quizzesMenu', methods=['GET', 'POST'])
+@app.route('/quizzesmenu', methods=['GET', 'POST'])
 @login_required
-def quizzesMenu():
-    return render_template('quizzesMenu.html')
+def quizzesmenu():
+    # Scan current directory for files named *_quizzes.txt
+    quiz_files = [f for f in os.listdir('.') if f.endswith('_quizzes.txt')]
+    quiz_options = [f.replace('_quizzes.txt', '') for f in quiz_files]
+    selected_quiz = None
+
+    if request.method == 'POST':
+        selected_quiz = request.form.get('quiz')
+        if selected_quiz:
+            # Redirect to quizzes route, passing the selected quiz as a query parameter
+            return redirect(url_for('quizzes', quiz=selected_quiz))
+
+    return render_template('quizzesmenu.html', quiz_options=quiz_options)
+
+@app.route('/createflash', methods=['GET', 'POST'])
+@login_required
+def createflash():
+    # Implement flashcard functionality here
+    
+    return render_template('createflash.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

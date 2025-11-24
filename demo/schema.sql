@@ -15,12 +15,12 @@ CREATE TABLE IF NOT EXISTS ProgressLogs (
     image_path TEXT
 );
 
-CREATE TABLE IF NOT EXISTS TestResults (
+CREATE TABLE IF NOT EXISTS Flashcards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
-    score INTEGER NOT NULL,
-    total_questions INTEGER NOT NULL,
-    date TEXT NOT NULL
+    question TEXT NOT NULL,
+    answer TEXT NOT NULL,
+    created_at TEXT NOT NULL
 );
 
 -- sqlite3 database.db ".read schema.sql"

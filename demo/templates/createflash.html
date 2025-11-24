@@ -5,7 +5,7 @@
 <h2>HOORAY!!!</h2>
 <form method="post">
     {% for quiz in quiz_options %}
-        <button type="submit" name="quiz" value="{{ quiz }}">{{ quiz|capitalize }}</button>
+        <button type="submit" name="flashcards" value="{{ quiz }}">{{ quiz|capitalize }}</button>
     {% endfor %}
 </form>
 {% endblock %}
