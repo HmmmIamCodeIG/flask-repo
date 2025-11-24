@@ -279,9 +279,13 @@ def quizzesmenu():
 @app.route('/createflash', methods=['GET', 'POST'])
 @login_required
 def createflash():
-    # Implement flashcard functionality here
-    
+
     return render_template('createflash.html')
 
+@app.route('/viewflash', methods=['GET', 'POST'])
+@login_required
+def viewflash():    
+    
+    return render_template('viewflash.html')
 if __name__ == '__main__':
     app.run(debug=True)

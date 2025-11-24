@@ -7,5 +7,6 @@
     {% for quiz in quiz_options %}
         <button type="submit" name="quiz" value="{{ quiz }}">{{ quiz|capitalize }}</button>
     {% endfor %}
+    <button type="submit" formaction="{{ url_for('own_quiz') }}">Create Your Own Quiz</button>
 </form>
 {% endblock %}
