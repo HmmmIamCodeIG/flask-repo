@@ -23,4 +23,23 @@ CREATE TABLE IF NOT EXISTS Flashcards (
     created_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS CustomQuizzes(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL, 
+    num_questions INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS CustomQuestions(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quiz_id INTEGER NOT NULL,
+    question TEXT NOT NULL,
+    answer_index INTEGER NOT NULL,
+    choice1 TEXT NOT NULL,
+    choice2 TEXT NOT NULL,
+    choice3 TEXT NOT NULL,
+    choice4 TEXT NOT NULL
+);
+
+
 -- sqlite3 database.db ".read schema.sql"

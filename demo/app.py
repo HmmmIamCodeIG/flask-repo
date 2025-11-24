@@ -140,7 +140,6 @@ def register():
             # keep flask-login and session in sync
             login_user(User(id=user['id'], username=user['username'], hashed_password=user['hashed_password']))
             session['user_id'] = user['id']
-
             # success
             flash('Registration successful!', 'success')
             conn.close()
@@ -260,18 +259,97 @@ def quizzes():
                             user_answers=user_answers,
                             questions=questions)
 
+@app.route('/quizzesCreate', methods=['GET', 'POST'])
+@login_required
+def quizzesCreate():
+    if request.method == 'POST':
+        quizName = request.form['quizName']
+        quizDescription = request.form['quizDescription']
+        numQuestions = int(request.form['numQuestions'])
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                "INSERT INTO CustomQuizzes (title, description, num_questions) VALUES (?, ?, ?)", 
+                (quizName, quizDescription, numQuestions)
+            )
+            quiz_id = cursor.lastrowid
+            conn.commit()
+            session['created_quiz_id'] = quiz_id
+            session['num_questions'] = numQuestions
+            return redirect(url_for('createQuestion'))
+        except sqlite3.IntegrityError:
+            conn.close()
+            flash('Invalid entry, please enter all fields', 'error')
+        except Exception as e:
+            conn.close()
+            flash(f'Error: {str(e)}', 'error')
+
+    return render_template('quizzesCreate.html')
+
+@app.route('/createQuestion', methods=['GET', 'POST'])
+@login_required
+def createQuestion():
+    quiz_id = session.get('created_quiz_id')
+    num_questions = session.get('num_questions')
+    quiz_data = {'numQuestions': num_questions}
+
+    if request.method == 'POST':
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        for i in range(num_questions):
+            question = request.form.get(f'question_{i}')
+            choices = [request.form.get(f'choice_{i}_{j}') for j in range(4)]
+            correct_index = int(request.form.get(f'correct_{i}'))
+
+            if not question or not all(choices):
+                conn.close()
+                flash(f'Please fill out all fields for question {i+1}.', 'error')
+                return redirect(url_for('createQuestion'))
+
+            try:
+                cursor.execute(
+                    "INSERT INTO CustomQuestions (quiz_id, question, answer_index, choice1, choice2, choice3, choice4) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (quiz_id, question, correct_index, choices[0], choices[1], choices[2], choices[3])
+                )
+            except sqlite3.IntegrityError:
+                conn.close()
+                flash('Invalid entry, please enter all fields', 'error')
+                return redirect(url_for('createQuestion'))
+            except Exception as e:
+                conn.close()
+                flash(f'Error: {str(e)}', 'error')
+                return redirect(url_for('createQuestion'))
+
+        conn.commit()
+        conn.close()
+        flash('Questions successfully created!', 'success')
+        return redirect(url_for('quizzesmenu'))
+    return render_template('createQuestion.html', quiz=quiz_data)
+
 @app.route('/quizzesmenu', methods=['GET', 'POST'])
 @login_required
 def quizzesmenu():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, title FROM CustomQuizzes")
+    custom_quizzes = cursor.fetchall()
+    conn.close()
+
     # Scan current directory for files named *_quizzes.txt
     quiz_files = [f for f in os.listdir('.') if f.endswith('_quizzes.txt')]
     quiz_options = [f.replace('_quizzes.txt', '') for f in quiz_files]
-    selected_quiz = None
 
+    # Add custom quizzes to options
+    quiz_options += [q['title'] for q in custom_quizzes]
+
+    selected_quiz = None
     if request.method == 'POST':
         selected_quiz = request.form.get('quiz')
         if selected_quiz:
-            # Redirect to quizzes route, passing the selected quiz as a query parameter
             return redirect(url_for('quizzes', quiz=selected_quiz))
 
     return render_template('quizzesmenu.html', quiz_options=quiz_options)
