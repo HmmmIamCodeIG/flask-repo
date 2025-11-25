@@ -18,14 +18,10 @@ document.getElementById('add-flashcard-btn').onclick = function() {
 
 // Flip flashcard on click
 document.addEventListener('DOMContentLoaded', function () {
-    // Add all elements with flip card to flip cards
-    const flipCards = document.querySelectorAll('.flip-card');
-    // For each flip card, add click event to toggle flipped class
-    flipCards.forEach(card => {
-        // On click, toggle flipped class
-        card.addEventListener('click', function () {
-            // flip the card
+    document.querySelector('.flashcard-sets').addEventListener('click', function (e) {
+        const card = e.target.closest('.flip-card');
+        if (card) {
             card.classList.toggle('flipped');
-        });
+        }
     });
 });

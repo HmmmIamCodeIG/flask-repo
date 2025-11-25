@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-<style rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 {% block title %}Flashcard{% endblock %}
 {% block heading %}View Flashcard Set{% endblock %}
 {% block content %}
@@ -10,7 +9,7 @@
         <h4>{{ set_name }}</h4>
         <div class="flashcard-grid">
             {% for flashcard in cards %}
-            <div class="flip-card">
+            <div class="flip-card" onclick="this.classList.toggle('flipped')">
                 <div class="flip-card-inner">
                     <div class="flip-card-front">
                         <p>Question: {{ flashcard.question }}</p>
@@ -25,7 +24,5 @@
     </div>
 {% endfor %}
 </div>
-{% endblock %}
-{% block scripts %}
-<script src="{{ url_for('static', filename='viewflash.js') }}"></script>
+<script src="{{ url_for('static', filename='flash.js') }}"></script>
 {% endblock %}

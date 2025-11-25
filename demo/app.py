@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3, random, os
+import sqlite3, random, os, re
 from flask_login import login_required, LoginManager, UserMixin, login_user, logout_user, current_user
 from datetime import date
 
@@ -54,8 +54,8 @@ def dashboard():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+    '''if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))'''
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -213,45 +213,37 @@ def quizzes():
     feedback = ''
     user_answers = []
     questions = []
-    # user selects which quiz to take
     selected_quiz = request.form.get('quiz') or request.args.get('quiz')
     try:
         if selected_quiz:
-            # read quiz questions from selected file
             with open(f'{selected_quiz}_quizzes.txt', 'r') as f:
                 for raw in f:
                     line = raw.strip()
                     if not line:
                         continue
-                    # strip whitespace and ignore empty parts
                     parts = [p.strip() for p in line.split(',') if p.strip()]
-                    question_text = parts[0] # first part is question
-                    correct_answer = parts[1] # second part is correct answer
-                    choices = parts[2:-1] # all parts except first, second and last are choices
-                    # shuffle choices to randomise order
+                    question_text = parts[0]
+                    correct_answer = parts[1]
+                    choices = parts[2:-1]
                     random.shuffle(choices)
                     questions.append({
                         "text": question_text,
                         "correct": correct_answer,
                         "choices": choices,
                     })
-    # no quiz file found
     except FileNotFoundError:
         flash('no file found.', 'error')
-    # other errors
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
-    # process submitted answers
     if request.method == 'POST':
-        for i in range(len(questions)):
-            # get user's answer for each question
+        num_questions = len(questions)
+        for i in range(num_questions):
             user_answers.append(request.form.get(f'question_{i}', '').strip())
-        # calculate score of correct answers
         correct = sum(1 for i, q in enumerate(questions)
-                        # check if user's answer matches the correct answer
-                        if i < len(user_answers) and user_answers[i] == q['correct'])
-        # provide back to user how they did
-        feedback = f"You got {correct} correct out of {len(questions)}!"
+                        if i < num_questions and user_answers[i] == q['correct'])
+        feedback = f"You got {correct} correct out of {num_questions}!"
+        # Store results in database
+        storequizresults(current_user.id, selected_quiz, correct, num_questions)
     return render_template('quizzes.html',
                             feedback=feedback,
                             user_answers=user_answers,
@@ -260,21 +252,13 @@ def quizzes():
 @app.route('/quizzesmenu', methods=['GET', 'POST'])
 @login_required
 def quizzesmenu():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, title FROM CustomQuizzes")
-    custom_quizzes = cursor.fetchall()
-    conn.close()
-    # Scan current directory for files named *_quizzes.txt
-
+    # list all avaliable quiz files
     quiz_files = [f for f in os.listdir('.') if f.endswith('_quizzes.txt')]
     quiz_options = [f.replace('_quizzes.txt', '') for f in quiz_files]
-    # Add custom quizzes to options
-
-    quiz_options += [q['title'] for q in custom_quizzes]
-    selected_quiz = None
+    # process selected quiz
     if request.method == 'POST':
         selected_quiz = request.form.get('quiz')
+        # redirect to quizzes page with selected quiz
         if selected_quiz:
             return redirect(url_for('quizzes', quiz=selected_quiz))
 
@@ -290,6 +274,7 @@ def createflash():
         created_at = date.today().isoformat()
         conn = get_db_connection()
         cursor = conn.cursor()
+        # insert each flashcard into the database
         try:
             for question, answer in zip(questions, answers):
                 cursor.execute(
@@ -299,10 +284,9 @@ def createflash():
             conn.commit()
             flash('Flashcard set created successfully!', 'success')
             return redirect(url_for('viewflash'))
+        # error handling    
         except Exception as e:
             flash(f'Error: {str(e)}', 'error')
-        finally:
-            conn.close()
     return render_template('createflash.html')
 
 @app.route('/viewflash', methods=['GET'])
@@ -321,14 +305,27 @@ def viewflash():
     flashcard_sets = {}
     for card in flashcards:
         set_name = card['flashcard_set']
+        # if not in a dictionary, add it
         if set_name not in flashcard_sets:
             flashcard_sets[set_name] = []
+        # append list of flashcards to the set
         flashcard_sets[set_name].append({
             'question': card['question'],
             'answer': card['answer']
         })
 
     return render_template('viewflash.html', flashcard_sets=flashcard_sets)
+
+def storequizresults(user_id, quiz_title, score, num_questions):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # Insert quiz result directly
+    cursor.execute(
+        "INSERT INTO UserQuizzes (user_id, quiz_title, score, num_questions, taken_at) VALUES (?, ?, ?, ?, ?)",
+        (user_id, quiz_title, score, num_questions, date.today().isoformat())
+    )
+    conn.commit()
+    conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
