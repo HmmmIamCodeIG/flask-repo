@@ -4,9 +4,10 @@
 {% block content %}
 <h2>HOORAY!!!</h2>
 <form method="post">
+    <p>Select a Pre-made Quiz:</p>
     {% for quiz in quiz_options %}
         <button type="submit" name="quiz" value="{{ quiz }}">{{ quiz|capitalize }}</button>
     {% endfor %}
-    <button type="submit" formaction="{{ url_for('quizzesCreate') }}">Or Create Your Own Quiz</button>
+    <p>Or Create Your Own Quiz: Jake's gay frfr</p>
 </form>
 {% endblock %}

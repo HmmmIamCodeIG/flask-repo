@@ -101,8 +101,6 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
     # Registration logic
     # on POST, get form data and insert new user into database
     if request.method == 'POST':
@@ -259,77 +257,6 @@ def quizzes():
                             user_answers=user_answers,
                             questions=questions)
 
-@app.route('/quizzesCreate', methods=['GET', 'POST'])
-@login_required
-def quizzesCreate():
-    if request.method == 'POST':
-        quizName = request.form['quizName']
-        quizDescription = request.form['quizDescription']
-        numQuestions = int(request.form['numQuestions'])
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        try:
-            cursor.execute(
-                "INSERT INTO CustomQuizzes (title, description, num_questions) VALUES (?, ?, ?)", 
-                (quizName, quizDescription, numQuestions)
-            )
-            quiz_id = cursor.lastrowid
-            conn.commit()
-            session['created_quiz_id'] = quiz_id
-            session['num_questions'] = numQuestions
-            return redirect(url_for('createQuestion'))
-        except sqlite3.IntegrityError:
-            conn.close()
-            flash('Invalid entry, please enter all fields', 'error')
-        except Exception as e:
-            conn.close()
-            flash(f'Error: {str(e)}', 'error')
-
-    return render_template('quizzesCreate.html')
-
-@app.route('/createQuestion', methods=['GET', 'POST'])
-@login_required
-def createQuestion():
-    quiz_id = session.get('created_quiz_id')
-    num_questions = session.get('num_questions')
-    quiz_data = {'numQuestions': num_questions}
-
-    if request.method == 'POST':
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        for i in range(num_questions):
-            question = request.form.get(f'question_{i}')
-            choices = [request.form.get(f'choice_{i}_{j}') for j in range(4)]
-            correct_index = int(request.form.get(f'correct_{i}'))
-
-            if not question or not all(choices):
-                conn.close()
-                flash(f'Please fill out all fields for question {i+1}.', 'error')
-                return redirect(url_for('createQuestion'))
-
-            try:
-                cursor.execute(
-                    "INSERT INTO CustomQuestions (quiz_id, question, answer_index, choice1, choice2, choice3, choice4) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (quiz_id, question, correct_index, choices[0], choices[1], choices[2], choices[3])
-                )
-            except sqlite3.IntegrityError:
-                conn.close()
-                flash('Invalid entry, please enter all fields', 'error')
-                return redirect(url_for('createQuestion'))
-            except Exception as e:
-                conn.close()
-                flash(f'Error: {str(e)}', 'error')
-                return redirect(url_for('createQuestion'))
-
-        conn.commit()
-        conn.close()
-        flash('Questions successfully created!', 'success')
-        return redirect(url_for('quizzesmenu'))
-    return render_template('createQuestion.html', quiz=quiz_data)
-
 @app.route('/quizzesmenu', methods=['GET', 'POST'])
 @login_required
 def quizzesmenu():
@@ -338,14 +265,13 @@ def quizzesmenu():
     cursor.execute("SELECT id, title FROM CustomQuizzes")
     custom_quizzes = cursor.fetchall()
     conn.close()
-
     # Scan current directory for files named *_quizzes.txt
+
     quiz_files = [f for f in os.listdir('.') if f.endswith('_quizzes.txt')]
     quiz_options = [f.replace('_quizzes.txt', '') for f in quiz_files]
-
     # Add custom quizzes to options
-    quiz_options += [q['title'] for q in custom_quizzes]
 
+    quiz_options += [q['title'] for q in custom_quizzes]
     selected_quiz = None
     if request.method == 'POST':
         selected_quiz = request.form.get('quiz')
@@ -357,13 +283,52 @@ def quizzesmenu():
 @app.route('/createflash', methods=['GET', 'POST'])
 @login_required
 def createflash():
-
+    if request.method == 'POST':
+        flashcard_set_name = request.form['flashcard_set_name']
+        questions = request.form.getlist('questions[]')
+        answers = request.form.getlist('answers[]')
+        created_at = date.today().isoformat()
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            for question, answer in zip(questions, answers):
+                cursor.execute(
+                    "INSERT INTO Flashcards (user_id, flashcard_set, question, answer, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (current_user.id, flashcard_set_name, question, answer, created_at)
+                )
+            conn.commit()
+            flash('Flashcard set created successfully!', 'success')
+            return redirect(url_for('viewflash'))
+        except Exception as e:
+            flash(f'Error: {str(e)}', 'error')
+        finally:
+            conn.close()
     return render_template('createflash.html')
 
-@app.route('/viewflash', methods=['GET', 'POST'])
+@app.route('/viewflash', methods=['GET'])
 @login_required
-def viewflash():    
-    
-    return render_template('viewflash.html')
+def viewflash():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT flashcard_set, question, answer FROM Flashcards WHERE user_id = ? ORDER BY created_at DESC",
+        (current_user.id,)
+    )
+    flashcards = cursor.fetchall()
+    conn.close()
+
+    # Group flashcards by set name
+    flashcard_sets = {}
+    for card in flashcards:
+        set_name = card['flashcard_set']
+        if set_name not in flashcard_sets:
+            flashcard_sets[set_name] = []
+        flashcard_sets[set_name].append({
+            'question': card['question'],
+            'answer': card['answer']
+        })
+
+    return render_template('viewflash.html', flashcard_sets=flashcard_sets)
+
 if __name__ == '__main__':
     app.run(debug=True)

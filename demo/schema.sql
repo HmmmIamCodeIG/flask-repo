@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS ProgressLogs (
 CREATE TABLE IF NOT EXISTS Flashcards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
+    flashcard_set TEXT NOT NULL,
     question TEXT NOT NULL,
     answer TEXT NOT NULL,
     created_at TEXT NOT NULL
