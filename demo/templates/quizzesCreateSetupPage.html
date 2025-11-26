@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Custom Quiz Setup</h1>
+<form method="POST" action="{{ url_for('quizsetup') }}">
+    <h2>Create New Quiz</h2>
+        <p>Name of Quiz</p>
+            <input type="text" name="title" placeholder="Quiz Name" required>
+        <p>Description</p>
+            <textarea class="large-input" name="description" placeholder="Quiz Description" required></textarea>
+        <p>Amount of Questions</p>
+            <input type="number" name="numQuestions" placeholder="Amount of Questions" required>
+        <button type="submit">Next</button>
+</form>
+{% endblock %}

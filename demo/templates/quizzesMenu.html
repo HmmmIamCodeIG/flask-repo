@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Quiz Menu</h1>
+<h3>Select a Quiz to Take or Create Your Own!</h3>
+<form method="post">
+    <p>Select a Pre-made Quiz:</p>
+    {% for quiz in quiz_options %}
+        <button type="submit" name="quiz" value="{{ quiz }}">{{ quiz|capitalize }}</button>
+    {% endfor %}
+    <p>Or Create Your Own Quiz:</p>
+    <a class="quiz-card" href="{{ url_for('quizsetup') }}">Create Custom Quiz</a>
+    <a class="quiz-card" href="{{ url_for('select_quiz') }}">View Custom Quizzes</a>
+</form>
+{% endblock %}

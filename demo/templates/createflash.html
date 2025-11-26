@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Create Your Own Flashcard Set!</h1>
+<form method="POST">
+    <label for="flashcard_set_name">Flashcard Set Name:</label>
+    <input type="text" id="flashcard_set_name" name="flashcard_set_name" required>
+    <div id="flashcards-container">
+        <div class="flashcard-entry">
+            <label>Question 1:</label>
+                <input type="text" name="questions[]" required>
+            <label>Answer 1:</label>
+                <input type="text" name="answers[]" required>
+        </div>
+    </div>
+<div class="form-buttons">
+    <button type="button" id="add-flashcard-btn">Add Another Flashcard</button>
+    <button type="submit">Create Flashcard Set</button>
+</div>
+</form>
+<script src="{{ url_for('static', filename='flash.js') }}"></script>
+{% endblock %}

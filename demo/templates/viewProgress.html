@@ -1,8 +1,6 @@
 {% extends 'base.html' %}   
-{% block title %}View Progress - Smart Study Quiz App{% endblock %}
-{% block heading %}Progress Check!!!!{% endblock %}
 {% block content %}
-    <p>View your Progress</p>
+<h1>View your Progress</h1>
     {% if posts %}
         <table>
                 <tr>
@@ -19,6 +17,8 @@
             {% endfor %}
         </table>
     {% else %}
+    <div class="no-progress">
         <p>No progress logs found.</p>
+    </div>
     {% endif %}
 {% endblock %}

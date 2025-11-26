@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>View Your Flashcards</h1>
+{% for set_name, cards in flashcard_sets.items() %}
+    <div class="flashcard-title">
+        <h4>{{ set_name }}</h4>
+        <div class="flashcard-grid">
+            {% for flashcard in cards %}
+            <div class="flip-card" onclick="this.classList.toggle('flipped')">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <p>Question: {{ flashcard.question }}</p>
+                    </div>
+                    <div class="flip-card-back">
+                        <p>Answer: {{ flashcard.answer }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endfor %}
+<script src="{{ url_for('static', filename='flash.js') }}"></script>
+{% endblock %}
