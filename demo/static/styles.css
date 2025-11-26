@@ -6,6 +6,7 @@ body {
     padding: 0;
     background-color: white;
     color: black;
+    font-family: 'Mitr', sans-serif;
 }
 
 header {
@@ -223,13 +224,18 @@ textarea.large-input {
     padding: 5px;
     margin: 4px 0 10px 0;
     box-sizing: border-box;
-    border: 1px solid #ccc;
+    border: 1px solid #ffd9d9;
     border-radius: 4px;
     font-size: 16px;
     font-family: 'Vend Sans', sans-serif;
     resize: vertical;
     min-height: 100px;
     min-width: 100px;
+}
+
+textarea.large-input:focus, .large-input:focus {
+    outline: none;
+    border-color: #ff7b7b;
 }
 
 a:hover {
@@ -321,13 +327,19 @@ hr {
 
 /* flashcard specific CSS */
 
-.flashcard-grid {
+.flashcard-title {
+    background: rgb(255, 247, 247);
+    border: 2px solid rgb(255, 181, 181);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(238, 108, 108, 0.08);
+    padding: 40px;
+    max-width: 900px;
+    margin: 30px auto;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: stretch;
+    flex-direction: column;
     gap: 32px;
-    width: 100%;
+    margin-bottom: 100px;
+    margin-top: 30px;
 }
 
 .flip-card {
@@ -374,28 +386,17 @@ hr {
 }
 
 .flip-card-back {
-    background: #ffd2d2ff;
+    background: rgb(255, 229, 229);
     transform: rotateY(180deg);
 }
 
-.flashcard-sets {
-    max-width: 900px;
-    margin: 30px auto;
+.flashcard-grid {
     display: flex;
-    flex-direction: column;
-    gap: 40px;
-    padding: 40px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(85, 85, 85, 0.814);
-}
-
-.flashcard-title {
-    background: rgb(255, 255, 255);
-    border: 2px solid rgb(255, 181, 181);
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(238, 108, 108, 0.08);
-    padding: 24px;
-    margin-bottom: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 32px;
+    width: 100%;
 }
 
 /** custom quiz specific CSS **/
@@ -453,4 +454,39 @@ input[name^="choice_"] {
 label {
     text-decoration: underline;
     font-weight: bold;
+}
+
+/** dashboard specific CSS **/
+textbubbles {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 40px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(85, 85, 85, 0.814);
+    display: flex;
+    flex-direction: column;
+    font-size: 20px;
+}
+
+p { 
+    font-size: 18px;
+    margin: 10px 20px;
+    padding: 5px 5px;
+    text-align: center;
+    font-family: 'Outfit', sans-serif;
+}
+
+ul {
+    font-size: 18px;
+    margin: 10px 40px;
+    padding: 0 5px 0 20px;
+    text-align: left;
+    font-family: 'Outfit', sans-serif;
+}
+
+img {
+    max-width: 800px;
+    height: auto;
+    display: block;
+    margin: 20px auto;
 }

@@ -112,6 +112,11 @@ def register():
             flash('Passwords do not match', 'error')
             return redirect(url_for('register'))
         try:       
+            # insecure way (vulnerable to SQL injection) for demonstration purposes only
+            '''cursor.execute(
+                f"INSERT INTO Users (username, password, email, display_name) VALUES ('{username}', '{password}', '{email}', '{displayName}')"
+            )'''
+            
             # secure way using parameterised queries
             # plaintext passwords are insecure
             hashed_pw = generate_password_hash(password)
@@ -539,6 +544,11 @@ def select_quiz():
     quizzes = cursor.fetchall()
     conn.close()
     return render_template('customQuizzespages.html', quizzes=quizzes)
+
+@app.route('/sdlc')
+@login_required
+def sdlc():
+    return render_template('SDLC.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

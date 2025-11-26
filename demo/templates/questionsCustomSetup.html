@@ -1,6 +1,7 @@
 {% extends 'base.html' %}   
 {% block title %}Create Questions - Smart Study Quiz App{% endblock %}
 {% block content %}
+<h1>Create Questions for {{ quiz_data['title'] }}</h1>
 <form method="post">
   <input type="hidden" name="quiz_id" value="{{ quiz_data['id'] }}">
   <!-- Example for one question; repeat up to quiz_data.numQuestions -->

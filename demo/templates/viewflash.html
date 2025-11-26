@@ -1,9 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Flashcard{% endblock %}
-{% block heading %}View Flashcard Set{% endblock %}
 {% block content %}
-<h2>View Your Flashcards</h2>
-<div class="flashcard-sets">
+<h1>View Your Flashcards</h1>
 {% for set_name, cards in flashcard_sets.items() %}
     <div class="flashcard-title">
         <h4>{{ set_name }}</h4>
@@ -23,6 +20,5 @@
         </div>
     </div>
 {% endfor %}
-</div>
 <script src="{{ url_for('static', filename='flash.js') }}"></script>
 {% endblock %}

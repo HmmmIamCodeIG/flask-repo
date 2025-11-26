@@ -1,8 +1,6 @@
 {% extends 'base.html' %}   
-{% block title %}Add Progress - Smart Study Quiz App{% endblock %}
-{% block heading %}Add Progress{% endblock %}
 {% block content %}
-<h2>ADD YOUR PROGRESS HERE!!!!</h2>
+<h1>Add Your Progress</h1>
     <form method="POST" action="{{ url_for('add_progress') }}">
         <p>Date
         <input type="date" name="date" required></p>

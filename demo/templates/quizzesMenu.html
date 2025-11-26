@@ -1,8 +1,7 @@
 {% extends 'base.html' %}
-{% block title %}Choose Quiz{% endblock %}
-{% block heading %}Choose a Quiz{% endblock %}
 {% block content %}
-<h2>HOORAY!!!</h2>
+<h1>Quiz Menu</h1>
+<h3>Select a Quiz to Take or Create Your Own!</h3>
 <form method="post">
     <p>Select a Pre-made Quiz:</p>
     {% for quiz in quiz_options %}

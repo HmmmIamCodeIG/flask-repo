@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% block content %} 
+<h1>Software Development Life Cycle (SDLC)</h1>
+<h2>Project Overview Documentation</h2>
+<textbubbles>
+	<h1>Project Specification</h1>
+	<h3>Requirements Definition</h3>
+	<p>
+		The software engineering project is a web-based learning platform that allows users to create, manage, and take custom quizzes. This feature aims to enhance student engagement and facilitate self-directed learning by providing an interactive environment where quizzes can be easily created, stored, and accessed through a user-friendly interface. 
+	</p>
+	<p>
+		The application enables users to log in, access flashcards, take multiple-choice quizzes on various subjects, and record their project progress, including the date, title, details of activities, challenges encountered, and solutions implemented. This task focuses on practical experience with Flask routing, SQLite database interactions, and basic web templating using Jinja, while also emphasizing key security concepts, such as transitioning from storing plain-text passwords to implementing secure password hashing.
+	</p>
+
+	<h3>Functional Requirements</h3>
+	<ul>
+		<li>User Authentication: Implement signup/login/logout with an initial insecure approach (plain-text passwords in SQLite), then upgrade to secure (hashed passwords using Werkzeug). Use sessions to persist user state.</li>
+		<li>Database Setup: Create a SQLite database with tables for Users (id, username, password, email)</li>
+		<li>Progress Logs (id, user_id, date, title, details, image_path nullable)</li>
+		<li>Quiz (Preset quizzes for history and geography, alongside with a function to create new custom quizzes.)</li>
+		<li>Use SQL files for table creation.</li>
+		<li>Progress Logging of development process: A form to add logs (date, title, details) and a view to display user-specific logs, stored in the database.</li>
+		<li>Basic Quiz Interface: A simple frontend to display flashcards and multiple-choice quizzes for one subject. </li>
+		<li>Users can submit answers and see feedback</li>
+	</ul>
+
+	<h3>Non-functional requirements</h3>
+	<ul>
+		<li>The codebase should have a clear structure for learning purposes.</li>
+		<li>Be easy to run locally with minimal dependencies.</li>
+		<li>Lightweight, with no unnecessary packages.</li>
+		<li>Use Flask for backend routing and Jinja for templating (e.g., base.html for inheritance).</li>
+		<li>Demonstrate insecure vs. secure practices</li>
+		<li>Plain-text vs. hashed passwords; raw vs. parameterised queries in code and documentation.</li>
+		<li>Code must be version-controlled with Git (include repository link in submission). </li>
+		<li>App should handle basic errors (e.g., flash messages for invalid login)</li>
+	</ul>
+
+	<h3>Constraints</h3>
+	<ul>
+		<li>Use only Flask, sqlite3 (no SQLAlchemy), and built-in Python libraries (e.g., datetime).</li>
+		<li>Install Werkzeug for hashing.</li>
+		<li>Limit to one subject for quizzes in this prototype.</li>
+		<li>No PWA features (e.g., service workers) or voice/ML yet.</li>
+	</ul>
+
+	<h3>Acceptance Criteria</h3>
+	<ul>
+		<li>Users can register and login, authenticating into the app.</li>
+		<li>Users can successfully create a quiz, add multiple-choice questions and save them to the database.</li>
+		<li>Users can view a list of quizzes they have created, and quiz details display correctly.</li>
+		<li>Quiz-taking functionality works as expected, with correct answers recorded and feedback displayed immediately.</li>
+		<li>All pages render correctly on desktop and mobile devices, and navigation is consistent across the platform.</li>
+		<li>Security measures (password hashing, SQL parameterisation) are implemented and functional.</li>
+		<li>The application performs reliably under normal usage without errors or crashes.</li>
+	</ul>
+</textbubbles>
+
+<textbubbles>
+<h2>Design Rationale</h2>
+<ul>
+	<li><b>Simplicity:</b> A minimal starter app focused on clarity for learning and extension.</li>
+	<li><b>Modularity:</b> Separate templates and static files for easy modification.</li>
+	<li><b>Documentation:</b> This SDLC doc makes the project purpose and design clear for contributors.</li>
+</ul>
+<h3>User Interface</h3>
+<ul>
+	<li>Responsive design using HTML, CSS, and Jinja templating (e.g., base.html inheritance across all HTML).</li>
+	<li>Clear, readable fonts and color contrast for accessibility.</li>
+	<li>Forms for login, quiz creation, question input, and progress logging.</li>
+	<li>Interactive quiz interface showing questions, choices, and immediate feedback.</li>
+	<li>Navigation menus linking all major pages (home, quizzes, flashcards, progress logs).</li>
+</ul>
+<h3>Integration Specifications</h3>
+<ul>
+	<li>Integration with SQLite for storing users, quizzes, and progress logs.</li>
+	<li>Ability to scale or extend database tables for multiple subjects or analytics.</li>
+	<li>Compatibility with Flask routing and session management for all interactive features.</li>
+</ul>
+</textbubbles>
+
+<textbubbles>
+<h2>IBO Documentation</h2>
+<h3>Register Page IBO</h3>
+<img src="{{ url_for('static', filename='sprites/IBO/registerIBO.png') }}" alt="registerIBO">
+<h3>Login Page IBO</h3>
+        <img src="{{ url_for('static', filename='sprites/IBO/loginIBO.png') }}" alt="loginIBO">
+<h3>Add Progress IBO</h3>
+        <img src="{{ url_for('static', filename='sprites/IBO/postProgressIBO.png') }}" alt="addprogressIBO">
+<h3>View Progress IBO</h3>
+        <img src="{{ url_for('static', filename='sprites/IBO/viewprogressIBO.png') }}" alt="viewprogressIBO">
+<h3>Quiz Taking IBO</h3>
+        <img src="{{ url_for('static', filename='sprites/IBO/quizzesIBO.png') }}" alt="quizzesIBO">
+<h3>Quiz Results IBO</h3>
+        <img src="{{ url_for('static', filename='sprites/IBO/quizzesResultIBO.png') }}" alt="quizresultsIBO">
+<h3>Create Flashcards IBO</h3>
+        <img src="{{ url_for('static', filename='sprites/IBO/createFlashcardsIBO.png') }}" alt="createflashIBO">
+<h3>View Flashcards IBO</h3>
+        <img src="{{ url_for('static', filename='sprites/IBO/viewFlashcardsIBO.png') }}" alt="viewflashIBO">
+<h3>Custom Questions IBO</h3>
+        <img src="{{ url_for('static', filename='sprites/IBO/customQuestionsIBO.png') }}" alt="customquestionsIBO">
+<h3>Custom Quizzes IBO</h3>
+        <img src="{{ url_for('static', filename='sprites/IBO/CustomQuizzesIBO.png') }}" alt="customquizzesIBO">
+</textbubbles>
+
+<textbubbles>
+<h2>Development</h2>
+<h3>Writing Code</h3>
+<ul>
+	<li>Front End: HTML and CSS, utilising Jinja templating for dynamic rendering.</li>
+	<li>Back End: Python (Flask), and JavaScript.</li>
+	<li>Begin by writing the source code using programming languages such as Python, JavaScript, HTML, and CSS.</li>
+	<li>All code is created in direct alignment with the functional and non-functional requirements established earlier.</li>
+	<li>Basic required features are added into the code.</li>
+</ul>
+
+<h3>Example of the Back End:</h3>
+<div class="example-image">
+    <img src="{{ url_for('static', filename='sprites/example_screenshots/backend.png') }}" alt="backend example">
+</div>
+
+<h3>Example of the Front End:</h3>
+<div class="example-image">
+    <img src="{{ url_for('static', filename='sprites/example_screenshots/frontend.png') }}" alt="frontend example">
+</div>
+
+<h3>Implementation of Key Functionality</h3>
+<ul>
+    <li>Each core feature outlined in the design phase is implemented during development. This includes constructing the system’s logic.</li>
+    <li>Functionality includes quiz handling, progress tracking, authentication, and flashcard creation.</li>
+    <li>User interface elements are developed to support a responsive user experience.</li>
+</ul>
+
+<h3>Security—Werkzeug & Login Functionality to Prevent SQL Injection</h3>
+<ul>
+    <li>User authentication is implemented using Flask and Werkzeug for secure storage of sensitive user data.</li>
+    <li>Passwords are hashed using generate_password_hash and verified with check_password_hash, preventing storage of plain-text passwords.</li>
+    <li>Parameterised SQL queries are used for all login and registration forms to prevent SQL injection attacks.</li>
+    <li>User input is never inserted into SQL statements as plain text; instead, placeholders (?) are used, and user-provided data is safely passed as query parameters.</li>
+</ul>
+
+<h3>Insecure Implementation of Authentication:</h3>
+<div class="example-image">
+    <img src="{{ url_for('static', filename='sprites/example_screenshots/insecure_authentication.png') }}" alt="insecure authentication example">
+</div>
+
+<h3>Insecure SQL Call Statements:</h3>
+<div class="example-image">
+    <img src="{{ url_for('static', filename='sprites/example_screenshots/insecure_SQL.png') }}" alt="insecure SQL example">
+</div>
+
+<h3>Secure Implementation of Authentication:</h3>
+<div class="example-image">
+	<img src="{{ url_for('static', filename='sprites/example_screenshots/secure_authentication.png') }}" alt="Secure authentication example">
+</div>
+
+<h3>Secure SQL Call Statements:</h3>
+<div class="example-image">
+	<img src="{{ url_for('static', filename='sprites/example_screenshots/secure_SQL.png') }}" alt="Secure SQL example">
+</div>
+
+<h3>Flask-Login Function:</h3>
+<div class="example-image">
+	<img src="{{ url_for('static', filename='sprites/example_screenshots/flask_login.png') }}" alt="Flask-Login function example">
+</div>
+</textbubbles>
+
+<textbubbles>
+<h2>Integrating & Testing Individual Components</h2>
+
+<h3>Register Page</h3>
+<ul>
+	<li>Registered a new user account with valid credentials.</li>
+	<li>Verified that the account details (username, email, etc.) were correctly stored in the database.</li>
+	<li>Checked that passwords are hashed using werkzeug security to prevent storing plaintext passwords.</li>
+	<li>Attempted to register with an existing username/email to ensure proper error handling.</li>
+	<li>Checked that invalid input (e.g., empty fields) prevented account creation.</li>
+</ul>
+
+<h3>Login Page</h3>
+<ul>
+	<li>Attempted to login with correct username and password, testing for authentication.</li>
+	<li>Attempted to login with an incorrect password and verified that login is denied.</li>
+	<li>Verified that the hashed password in the database matches using <code>check_password_hash</code>.</li>
+	<li>Checked that a session is created upon successful login and destroyed on logout.</li>
+	<li>Ensured SQL injection attempts (e.g., '<code>' OR 1=1 --</code>') are prevented.</li>
+</ul>
+
+<h3>Posting Progress</h3>
+<ul>
+	<li>Accessed the "view progress" page after logging in.</li>
+	<li>Verified that the page displays all progress entries associated with the logged-in user.</li>
+	<li>Checked that other users’ progress is not visible unless allowed.</li>
+	<li>Tested empty state (no progress posted yet) to ensure proper messaging.</li>
+</ul>
+
+<h3>View Progress</h3>
+<ul>
+	<li>Loaded a quiz from a pre-made text file (<code>history_quizzes.txt</code>) to be displayed properly.</li>
+	<li>Verified that all questions and answers are read correctly.</li>
+	<li>Tested quiz completion to ensure the score is calculated correctly.</li>
+	<li>Checked for handling of malformed or missing quiz files.</li>
+</ul>
+
+<h3>Pre-made Quiz Text File</h3>
+<ul>
+	<li>Loaded a quiz from a pre-made text file to verify if reading worked correctly.</li>
+	<li>Verified that all questions and answers are read correctly.</li>
+	<li>Tested quiz completion to ensure the score is calculated correctly.</li>
+	<li>Checked for handling of malformed or missing quiz files.</li>
+</ul>
+
+<h3>Custom Quiz Functions</h3>
+<ul>
+	<li>Created a custom quiz with multiple questions to test if custom quizzes worked.</li>
+	<li>Saved the quiz to the database and verified storage.</li>
+	<li>Attempted to take the custom quiz and verified correct scoring.</li>
+</ul>
+
+<h3>Creating and Viewing Flashcards</h3>
+<ul>
+	<li>Created new flashcards and verified they appear in the grid.</li>
+	<li>Tested the flip functionality to view back content.</li>
+	<li>Verified that flashcards are saved in the database correctly.</li>
+	<li>Checked that flashcards remained after page reload and are displayed under the correct user account.</li>
+</ul>
+
+<h3>Results</h3>
+<img src="{{ url_for('static', filename='sprites/results.png') }}" alt="testing results example">
+</textbubbles>
+
+<textbubbles>
+<h3>System Testing & Validation</h3>
+<h4>Testing For Security Risks — Bandit</h4>
+<p>
+	Bandit is a security linter for Python code that identifies common security issues. It scans the codebase for potential vulnerabilities and provides recommendations for remediation. By running Bandit on my app.py, it allows for an automatic scan of the Flask project for common security vulnerabilities. Running Bandit allowed me to identify weak points in the codebase early and ensure safer handling of user input, sessions, and database interactions, such as identifying that the debug mode being set as true allows a potential injection point. 
+</p>
+</textbubbles>
+{% endblock %}
