@@ -300,7 +300,7 @@ def quizzesmenu():
     cursor.execute("SELECT id, title, description, numQuestions FROM Quizzes ORDER BY id DESC")
     quizzes = cursor.fetchall()
     conn.close()
-
+    # Handle quiz selection
     if request.method == 'POST':
         quiz_id = request.form.get('quiz_id')
         quiz_file_name = request.form.get('quiz')
@@ -452,6 +452,7 @@ def questionsCustomSetup():
     conn = get_db_connection()
     cursor = conn.cursor()
     # Determine quiz_id from POST, then query string, then session
+
     quiz_id = None
     if request.method == 'POST':
         quiz_id = request.form.get('quiz_id')
@@ -464,10 +465,12 @@ def questionsCustomSetup():
         conn.close()
         flash('No quiz found to add questions. Please create a quiz first.', 'error')
         return redirect(url_for('quizsetup'))
+    
     # fetch quiz details
     cursor.execute("SELECT id, title, numQuestions FROM Quizzes WHERE id = ?", (quiz_id,))
     quiz_data = cursor.fetchone()
     # if no quiz found, redirect to quiz setup
+
     if not quiz_data:
         conn.close()
         flash('No quiz found to add questions. Please create a quiz first.', 'error')
@@ -512,6 +515,7 @@ def questionsCustomSetup():
                 "INSERT INTO Questions (quiz_id, question, choice1, choice2, choice3, choice4, correct_index) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (quiz_id, question, choices[0], choices[1], choices[2], choices[3], correct_index)
             )
+    
         # commit changes to database
         conn.commit()
         conn.close()
@@ -521,11 +525,6 @@ def questionsCustomSetup():
 
     conn.close()
     return render_template('questionsCustomSetup.html', quiz_data=quiz_data)
-
-@app.route('/createQuiz', methods=['POST'])
-@login_required
-def createQuiz():
-    return quizsetup()
 
 @app.route('/select_quiz', methods=['GET'])
 @login_required

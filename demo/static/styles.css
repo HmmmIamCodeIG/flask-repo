@@ -270,6 +270,7 @@ img {
     background: #faebeb;
     border-radius: 6px;
     padding: 16px 12px;
+    margin-bottom: 24px;
     box-shadow: 0 1px 4px rgba(230,108,108,.08);
     font-family: 'Ysabeau SC',sans-serif;
 }
