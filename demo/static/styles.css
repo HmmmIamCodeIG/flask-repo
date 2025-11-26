@@ -229,6 +229,7 @@ textarea.large-input {
     font-family: 'Vend Sans', sans-serif;
     resize: vertical;
     min-height: 100px;
+    min-width: 100px;
 }
 
 a:hover {
@@ -395,3 +396,5 @@ hr {
     padding: 24px;
     margin-bottom: 0;
 }
+
+/** custom quiz specific CSS **/

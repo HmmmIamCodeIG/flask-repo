@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}View Custom Quizzes - Smart Study Quiz App{% endblock %}
+{% block heading %}View Custom Quizzes{% endblock %}
+{% block content %}
+<h1>custom quiz view</h1>
+<form>
+<h2>Custom Quizzes</h2>
+    {% if quizzes and quizzes|length > 0 %}
+        {% for q in quizzes %}
+              {{ q['title'] }} ({{ q['numQuestions'] }} questions)
+                <form method="POST" action="{{ url_for('quizzesmenu') }}" style="display:inline;">
+                    <button type="submit" name="quiz_id" value="{{ q['id'] }}">Start</button>
+                </form>
+        {% endfor %}
+    {% else %}
+        <p>No custom quizzes yet.</p>
+    {% endif %}
+</form>
+{% endblock %}

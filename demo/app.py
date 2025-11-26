@@ -23,6 +23,8 @@ class User(UserMixin):
         self.username = username
         self.hashed_password = hashed_password
 
+### AUTHENTICATION ROUTES ###
+
 # load user from database
 @login_manager.user_loader
 def load_user(user_id):
@@ -44,13 +46,6 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row  
     # Allows accessing columns by name
     return conn
-
-@app.route('/')
-@login_required
-def dashboard():
-    '''if 'user_id' not in session:
-        return redirect(url_for('login'))'''
-    return render_template('dashboard.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -155,6 +150,8 @@ def register():
 
     return render_template('register.html')
 
+### progress log routes ###
+
 @app.route('/add_progress', methods=['GET', 'POST'])
 @login_required
 def add_progress():
@@ -207,34 +204,52 @@ def view_progress():
     # display all posts if user has - dynamic
     return render_template('viewProgress.html', posts = posts)
 
+@app.route('/')
+@login_required
+def dashboard():
+    '''if 'user_id' not in session:
+        return redirect(url_for('login'))'''
+    return render_template('dashboard.html')
+
+### main quiz routes ###
+
 @app.route('/quizzes', methods=['GET', 'POST'])
 @login_required
 def quizzes():
+    # load variable for feedback, user answers, questions
     feedback = ''
     user_answers = []
     questions = []
     selected_quiz = request.form.get('quiz') or request.args.get('quiz')
+    # read quiz file and parse questions
     try:
         if selected_quiz:
             with open(f'{selected_quiz}_quizzes.txt', 'r') as f:
+                # read each line in the file
                 for raw in f:
+                    # strip whitespace and skip empty lines
                     line = raw.strip()
+                    # if not line, skip
                     if not line:
                         continue
+                    # read each line and parse question, correct answer and choices
                     parts = [p.strip() for p in line.split(',') if p.strip()]
                     question_text = parts[0]
                     correct_answer = parts[1]
                     choices = parts[2:-1]
                     random.shuffle(choices)
+                    # append the question to the questions list
                     questions.append({
                         "text": question_text,
                         "correct": correct_answer,
                         "choices": choices,
                     })
+    # error handling
     except FileNotFoundError:
         flash('no file found.', 'error')
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
+    # process quiz submission
     if request.method == 'POST':
         num_questions = len(questions)
         for i in range(num_questions):
@@ -252,22 +267,49 @@ def quizzes():
 @app.route('/quizzesmenu', methods=['GET', 'POST'])
 @login_required
 def quizzesmenu():
-    # list all avaliable quiz files
+    # File-based quizzes
     quiz_files = [f for f in os.listdir('.') if f.endswith('_quizzes.txt')]
     quiz_options = [f.replace('_quizzes.txt', '') for f in quiz_files]
-    # process selected quiz
+
+    # Custom quizzes from DB
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, title, description, numQuestions FROM Quizzes ORDER BY id DESC")
+    quizzes = cursor.fetchall()
+    conn.close()
+
     if request.method == 'POST':
-        selected_quiz = request.form.get('quiz')
-        # redirect to quizzes page with selected quiz
-        if selected_quiz:
-            return redirect(url_for('quizzes', quiz=selected_quiz))
+        quiz_id = request.form.get('quiz_id')
+        quiz_file_name = request.form.get('quiz')
+        # If starting a custom quiz
+        if quiz_id:
+            return redirect(url_for('quizzes', quiz_id=quiz_id))
+        # If starting a file-based quiz
+        if quiz_file_name:
+            return redirect(url_for('quizzes', quiz=quiz_file_name))
 
-    return render_template('quizzesmenu.html', quiz_options=quiz_options)
+    return render_template('quizzesmenu.html', quiz_options=quiz_options, quizzes=quizzes)
 
+@app.route('/viewquizresults', methods=['GET'])
+@login_required
+def viewquizresults():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # fetch all quiz results for the logged-in user
+    cursor.execute(
+        "SELECT quiz_title, score, num_questions, taken_at FROM UserQuizzes WHERE user_id = ? ORDER BY taken_at DESC",
+        (current_user.id,)
+    )
+    quiz_results = cursor.fetchall()
+    conn.close()
+    return render_template('quizzesResults.html', quiz_results=quiz_results)
+
+### FLASHCARD ROUTES
 @app.route('/createflash', methods=['GET', 'POST'])
 @login_required
 def createflash():
     if request.method == 'POST':
+        # variable to store flashcard set name, questions and answers
         flashcard_set_name = request.form['flashcard_set_name']
         questions = request.form.getlist('questions[]')
         answers = request.form.getlist('answers[]')
@@ -294,10 +336,12 @@ def createflash():
 def viewflash():
     conn = get_db_connection()
     cursor = conn.cursor()
+    # fetch all flashcards for the logged-in user 
     cursor.execute(
         "SELECT flashcard_set, question, answer FROM Flashcards WHERE user_id = ? ORDER BY created_at DESC",
         (current_user.id,)
     )
+    # fetch all flashcards 
     flashcards = cursor.fetchall()
     conn.close()
 
@@ -324,8 +368,131 @@ def storequizresults(user_id, quiz_title, score, num_questions):
         "INSERT INTO UserQuizzes (user_id, quiz_title, score, num_questions, taken_at) VALUES (?, ?, ?, ?, ?)",
         (user_id, quiz_title, score, num_questions, date.today().isoformat())
     )
+    # 
     conn.commit()
     conn.close()
+
+### CUSTOM QUIZ CREATION ROUTES ###
+@app.route('/quizsetup', methods=['GET', 'POST'])
+@login_required
+def quizsetup():
+    if request.method == 'GET':
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, title, description, numQuestions FROM Quizzes ORDER BY id DESC")
+        quizzes = cursor.fetchall()
+        conn.close()
+        return render_template('quizzesCreateSetupPage.html', quizzes=quizzes)
+
+    # Handle quiz creation on POST
+    title = request.form.get('title')
+    description = request.form.get('description')
+    numQuestions_raw = request.form.get('numQuestions')
+    try:
+        numQuestions = int(numQuestions_raw)
+    except (TypeError, ValueError):
+        flash('Number of questions must be a valid number.', 'error')
+        return redirect(url_for('quizsetup'))
+    if not title or not description or numQuestions <= 0:
+        flash('Please fill in all fields with valid values.', 'error')
+        return redirect(url_for('quizsetup'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO Quizzes (title, description, numQuestions) VALUES (?, ?, ?)",
+            (title, description, numQuestions)
+        )
+        quiz_id = cursor.lastrowid
+        conn.commit()
+        session['created_quiz_id'] = quiz_id
+        return redirect(url_for('questionsCustomSetup'))
+    except sqlite3.IntegrityError:
+        flash('Invalid entry. Please fill in all fields.', 'error')
+        return redirect(url_for('quizsetup'))
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+        return redirect(url_for('quizsetup'))
+    finally:
+        conn.close()
+
+@app.route('/questionsCustomSetup', methods=['GET', 'POST'])
+@login_required
+def questionsCustomSetup():
+    quiz_data = None
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Always fetch quiz data using the stored session id
+    cursor.execute("SELECT id, title, numQuestions FROM Quizzes WHERE id = ?", (session.get('created_quiz_id'),))
+    quiz_data = cursor.fetchone()
+    if not quiz_data:
+        conn.close()
+        flash('No quiz found to add questions. Please create a quiz first.', 'error')
+        return redirect(url_for('quizsetup'))
+
+    if request.method == 'POST':
+        num_questions = quiz_data['numQuestions']
+        quiz_id = quiz_data['id']
+        for i in range(num_questions):
+            question = request.form.get(f'question_{i}')
+            choices = [request.form.get(f'choice_{i}_{j}') for j in range(4)]
+            correct_index_raw = request.form.get(f'correct_{i}')
+
+            if correct_index_raw is None:
+                conn.close()
+                flash(f'Please select a correct choice for question {i+1}.', 'error')
+                return redirect(url_for('questionsCustomSetup'))
+
+            try:
+                correct_index = int(correct_index_raw)
+            except ValueError:
+                conn.close()
+                flash(f'Invalid correct choice index for question {i+1}.', 'error')
+                return redirect(url_for('questionsCustomSetup'))
+
+            if not question or not all(choices):
+                conn.close()
+                flash(f'Please fill out all fields for question {i+1}.', 'error')
+                return redirect(url_for('questionsCustomSetup'))
+
+            try:
+                cursor.execute(
+                    "INSERT INTO Questions (quiz_id, question, choice1, choice2, choice3, choice4, correct_index) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    (quiz_id, question, choices[0], choices[1], choices[2], choices[3], correct_index)
+                )
+            except sqlite3.IntegrityError:
+                conn.close()
+                flash('Invalid entry, please enter all fields', 'error')
+                return redirect(url_for('questionsCustomSetup'))
+            except Exception as e:
+                conn.close()
+                flash(f'Error: {str(e)}', 'error')
+                return redirect(url_for('questionsCustomSetup'))
+
+        conn.commit()
+        conn.close()
+        flash('Questions successfully created!', 'success')
+        return redirect(url_for('quizzesmenu'))
+
+    conn.close()
+    return render_template('questionsCustomSetup.html', quiz_data=quiz_data)
+
+@app.route('/createQuiz', methods=['POST'])
+@login_required
+def createQuiz():
+    return quizsetup()
+
+@app.route('/select_quiz', methods=['GET'])
+@login_required
+def select_quiz():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, title, description, numQuestions FROM Quizzes ORDER BY id DESC")
+    quizzes = cursor.fetchall()
+    conn.close()
+    return render_template('customQuizzespages.html', quizzes=quizzes)
 
 if __name__ == '__main__':
     app.run(debug=True)

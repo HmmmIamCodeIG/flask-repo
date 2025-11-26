@@ -33,4 +33,28 @@ CREATE TABLE IF NOT EXISTS UserQuizzes (
     taken_at TEXT
 );
 
+CREATE TABLE IF NOT EXISTS CustomQuizzes(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Quizzes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    numQuestions INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    quiz_id INTEGER NOT NULL,
+    question TEXT NOT NULL,
+    choice1 TEXT NOT NULL,
+    choice2 TEXT NOT NULL,
+    choice3 TEXT NOT NULL,
+    choice4 TEXT NOT NULL,
+    correct_index INTEGER NOT NULL,
+    FOREIGN KEY (quiz_id) REFERENCES Quizzes(id) ON DELETE CASCADE
+);
+
 -- sqlite3 database.db ".read schema.sql"
