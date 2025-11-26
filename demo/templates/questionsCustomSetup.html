@@ -1,21 +1,33 @@
 {% extends 'base.html' %}   
 {% block title %}Create Questions - Smart Study Quiz App{% endblock %}
 {% block content %}
-    <form method="POST" action="{{ url_for('questionsCustomSetup') }}" style="width: 60vw;">
-        <h1>Create Questions</h1>
-        <p>Quiz: {{ quiz_data['title'] }}</p>
-        {% for i in range(quiz_data['numQuestions']) %}
-            <p> Question {{ i + 1 }}
-                <input type="text" name="question_{{ i }}" placeholder="Question" required>
+<form method="post">
+  <input type="hidden" name="quiz_id" value="{{ quiz_data['id'] }}">
+  <!-- Example for one question; repeat up to quiz_data.numQuestions -->
+<div>
+    <label>Question 1</label>
+    <input type="text" name="question_0" required>
+    <div>
+        <label>Choices</label>
+        <p>
+        <input type="text" name="choice_0_0" placeholder="Choice A" required>
+        <input type="text" name="choice_0_1" placeholder="Choice B" required>
+        <input type="text" name="choice_0_2" placeholder="Choice C" required>
+        <input type="text" name="choice_0_3" placeholder="Choice D" required>
+        </p>
+    </div>
+    <div>
+        <label>Correct answer</label>
+            <!-- value can be 0-3 or 1-4; backend normalizes -->
+            <p>
+            A <input type="radio" name="correct_0" value="0" required> 
+            B <input type="radio" name="correct_0" value="1"> 
+            C <input type="radio" name="correct_0" value="2"> 
+            D <input type="radio" name="correct_0" value="3"> 
             </p>
-            <p> Choices: </p>
-            {% for j in range(4) %}
-                    <input type="radio" name="correct_{{ i }}" value="{{ j }}" required>
-                    <input type="text" name="choice_{{ i }}_{{ j }}" placeholder="Choice {{ j + 1 }}" required style="width: 10vw;">
-                 <br>
-            {% endfor %}
-            <hr>
-        {% endfor %}
-        <button type="submit">Save Questions</button>
-    </form>
+    </div>
+</div>
+  <!-- Repeat blocks for question_1, choice_1_0..choice_1_3, correct_1, etc. -->
+  <button type="submit">Save questions</button>
+</form>
 {% endblock %}

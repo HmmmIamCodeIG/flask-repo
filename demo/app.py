@@ -4,7 +4,6 @@ import sqlite3, random, os, re
 from flask_login import login_required, LoginManager, UserMixin, login_user, logout_user, current_user
 from datetime import date
 
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret-key'  
 # For sessions and flash messages
@@ -155,6 +154,7 @@ def register():
 @app.route('/add_progress', methods=['GET', 'POST'])
 @login_required
 def add_progress():
+    # on POST, get form data and insert new progress log into database
     if request.method == 'POST':
         date = request.form['date']
         title = request.form['title']
@@ -162,7 +162,6 @@ def add_progress():
 
         conn = get_db_connection()
         cursor = conn.cursor()
-
         try:
             # Using parameterised query to avoid SQL injection
             cursor.execute(
@@ -212,53 +211,77 @@ def dashboard():
     return render_template('dashboard.html')
 
 ### main quiz routes ###
-
 @app.route('/quizzes', methods=['GET', 'POST'])
 @login_required
 def quizzes():
-    # load variable for feedback, user answers, questions
+    # variables to store quiz data
     feedback = ''
     user_answers = []
     questions = []
+    quiz_id = request.args.get('quiz_id')
     selected_quiz = request.form.get('quiz') or request.args.get('quiz')
-    # read quiz file and parse questions
-    try:
-        if selected_quiz:
-            with open(f'{selected_quiz}_quizzes.txt', 'r') as f:
-                # read each line in the file
-                for raw in f:
-                    # strip whitespace and skip empty lines
-                    line = raw.strip()
-                    # if not line, skip
-                    if not line:
-                        continue
-                    # read each line and parse question, correct answer and choices
-                    parts = [p.strip() for p in line.split(',') if p.strip()]
-                    question_text = parts[0]
-                    correct_answer = parts[1]
-                    choices = parts[2:-1]
-                    random.shuffle(choices)
-                    # append the question to the questions list
-                    questions.append({
-                        "text": question_text,
-                        "correct": correct_answer,
-                        "choices": choices,
-                    })
-    # error handling
-    except FileNotFoundError:
-        flash('no file found.', 'error')
-    except Exception as e:
-        flash(f'Error: {str(e)}', 'error')
-    # process quiz submission
+    # custom quiz from database
+    if quiz_id:
+        # fetch quiz questions from database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # parameterised query to avoid SQL injection
+        cursor.execute("SELECT question, choice1, choice2, choice3, choice4, correct_index FROM Questions WHERE quiz_id = ?", (quiz_id,))
+        quiz_questions = cursor.fetchall()
+        # if no questions exist for this quiz, show a message and redirect to the list
+        if not quiz_questions:
+            conn.close()
+            flash('This quiz has no questions yet. Please add questions or pick another quiz.', 'error')
+            return redirect(url_for('select_quiz'))
+        # structure quiz questions
+        for q in quiz_questions:
+            choices = [q['choice1'], q['choice2'], q['choice3'], q['choice4']]
+            correct_choice = choices[q['correct_index']]
+            questions.append({
+                "text": q['question'],
+                "correct": correct_choice,
+                "choices": choices,
+            })
+        # fetch quiz title
+        cursor.execute("SELECT title FROM Quizzes WHERE id = ?", (quiz_id,))
+        row = cursor.fetchone()
+        quiz_title = row['title'] if row else 'Quiz'
+        conn.close()
+    # File-based quiz
+    elif selected_quiz:
+        # open corresponding quiz file
+        with open(f'{selected_quiz}_quizzes.txt', 'r') as f:
+            for raw in f:
+                # process each line
+                line = raw.strip()
+                if not line:
+                    continue
+                parts = [p.strip() for p in line.split(',') if p.strip()]
+                question_text = parts[0]
+                correct_answer = parts[1]
+                choices = parts[2:-1]
+                # shuffle choices
+                random.shuffle(choices)
+                questions.append({
+                    "text": question_text,
+                    "correct": correct_answer,
+                    "choices": choices,
+                })
+        # set quiz title
+        quiz_title = selected_quiz
+    # Handle POST
     if request.method == 'POST':
         num_questions = len(questions)
+        # gather user answers
         for i in range(num_questions):
             user_answers.append(request.form.get(f'question_{i}', '').strip())
+        # calculate score
         correct = sum(1 for i, q in enumerate(questions)
                         if i < num_questions and user_answers[i] == q['correct'])
         feedback = f"You got {correct} correct out of {num_questions}!"
         # Store results in database
-        storequizresults(current_user.id, selected_quiz, correct, num_questions)
+        storequizresults(current_user.id, quiz_title, correct, num_questions)
+    # Render quiz template
     return render_template('quizzes.html',
                             feedback=feedback,
                             user_answers=user_answers,
@@ -377,6 +400,7 @@ def storequizresults(user_id, quiz_title, score, num_questions):
 @login_required
 def quizsetup():
     if request.method == 'GET':
+        # fetch existing quizzes to display
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT id, title, description, numQuestions FROM Quizzes ORDER BY id DESC")
@@ -387,9 +411,11 @@ def quizsetup():
     # Handle quiz creation on POST
     title = request.form.get('title')
     description = request.form.get('description')
-    numQuestions_raw = request.form.get('numQuestions')
+    numQuestions = request.form.get('numQuestions')
+    # validate inputs
     try:
-        numQuestions = int(numQuestions_raw)
+        numQuestions = int(numQuestions)
+    # error converting to int
     except (TypeError, ValueError):
         flash('Number of questions must be a valid number.', 'error')
         return redirect(url_for('quizsetup'))
@@ -397,8 +423,10 @@ def quizsetup():
         flash('Please fill in all fields with valid values.', 'error')
         return redirect(url_for('quizsetup'))
 
+    # insert new quiz into database
     conn = get_db_connection()
     cursor = conn.cursor()
+    # use parameterised query to avoid SQL injection
     try:
         cursor.execute(
             "INSERT INTO Quizzes (title, description, numQuestions) VALUES (?, ?, ?)",
@@ -408,6 +436,7 @@ def quizsetup():
         conn.commit()
         session['created_quiz_id'] = quiz_id
         return redirect(url_for('questionsCustomSetup'))
+    # error handling
     except sqlite3.IntegrityError:
         flash('Invalid entry. Please fill in all fields.', 'error')
         return redirect(url_for('quizsetup'))
@@ -420,59 +449,73 @@ def quizsetup():
 @app.route('/questionsCustomSetup', methods=['GET', 'POST'])
 @login_required
 def questionsCustomSetup():
-    quiz_data = None
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    # Always fetch quiz data using the stored session id
-    cursor.execute("SELECT id, title, numQuestions FROM Quizzes WHERE id = ?", (session.get('created_quiz_id'),))
+    # Determine quiz_id from POST, then query string, then session
+    quiz_id = None
+    if request.method == 'POST':
+        quiz_id = request.form.get('quiz_id')
+    # If not in POST, check query string or session
+    if not quiz_id:
+        quiz_id = request.args.get('quiz_id') or session.get('created_quiz_id') 
+    try:
+        quiz_id = int(quiz_id)
+    except (TypeError, ValueError):
+        conn.close()
+        flash('No quiz found to add questions. Please create a quiz first.', 'error')
+        return redirect(url_for('quizsetup'))
+    # fetch quiz details
+    cursor.execute("SELECT id, title, numQuestions FROM Quizzes WHERE id = ?", (quiz_id,))
     quiz_data = cursor.fetchone()
+    # if no quiz found, redirect to quiz setup
     if not quiz_data:
         conn.close()
         flash('No quiz found to add questions. Please create a quiz first.', 'error')
         return redirect(url_for('quizsetup'))
-
+    # Handle question submission
     if request.method == 'POST':
+        # process submitted questions
         num_questions = quiz_data['numQuestions']
-        quiz_id = quiz_data['id']
         for i in range(num_questions):
+            # question and choices from form
             question = request.form.get(f'question_{i}')
             choices = [request.form.get(f'choice_{i}_{j}') for j in range(4)]
             correct_index_raw = request.form.get(f'correct_{i}')
-
+            # if any field is missing
             if correct_index_raw is None:
                 conn.close()
                 flash(f'Please select a correct choice for question {i+1}.', 'error')
-                return redirect(url_for('questionsCustomSetup'))
-
+                return redirect(url_for('questionsCustomSetup', quiz_id=quiz_id))
+            # validate correct index
             try:
                 correct_index = int(correct_index_raw)
-            except ValueError:
+                # If radios post 1-4, convert to 0-3
+                if correct_index not in (0, 1, 2, 3):
+                    correct_index = correct_index - 1
+                # error if out of range
+                if correct_index not in (0, 1, 2, 3):
+                    raise ValueError('correct_index out of range')
+            # error converting to int
+            except Exception:
                 conn.close()
                 flash(f'Invalid correct choice index for question {i+1}.', 'error')
-                return redirect(url_for('questionsCustomSetup'))
-
+                return redirect(url_for('questionsCustomSetup', quiz_id=quiz_id))
+            # if any field is missing
             if not question or not all(choices):
+                # flash error and redirect
                 conn.close()
                 flash(f'Please fill out all fields for question {i+1}.', 'error')
-                return redirect(url_for('questionsCustomSetup'))
-
-            try:
-                cursor.execute(
-                    "INSERT INTO Questions (quiz_id, question, choice1, choice2, choice3, choice4, correct_index) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                    (quiz_id, question, choices[0], choices[1], choices[2], choices[3], correct_index)
-                )
-            except sqlite3.IntegrityError:
-                conn.close()
-                flash('Invalid entry, please enter all fields', 'error')
-                return redirect(url_for('questionsCustomSetup'))
-            except Exception as e:
-                conn.close()
-                flash(f'Error: {str(e)}', 'error')
-                return redirect(url_for('questionsCustomSetup'))
-
+                return redirect(url_for('questionsCustomSetup', quiz_id=quiz_id))
+            # insert question into database
+            # use parameterised query to avoid SQL injection
+            cursor.execute(
+                "INSERT INTO Questions (quiz_id, question, choice1, choice2, choice3, choice4, correct_index) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (quiz_id, question, choices[0], choices[1], choices[2], choices[3], correct_index)
+            )
+        # commit changes to database
         conn.commit()
         conn.close()
+        session.pop('created_quiz_id', None)
         flash('Questions successfully created!', 'success')
         return redirect(url_for('quizzesmenu'))
 
