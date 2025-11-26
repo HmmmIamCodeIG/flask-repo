@@ -478,8 +478,8 @@ def questionsCustomSetup():
     # fetch quiz details
     cursor.execute("SELECT id, title, numQuestions FROM Quizzes WHERE id = ?", (quiz_id,))
     quiz_data = cursor.fetchone()
+    
     # if no quiz found, redirect to quiz setup
-
     if not quiz_data:
         conn.close()
         flash('No quiz found to add questions. Please create a quiz first.', 'error')

@@ -8,25 +8,25 @@
 <div>
     <label>Question 1</label>
     <input type="text" name="question_0" required>
-    <div>
-        <label>Choices</label>
-        <p>
-        <input type="text" name="choice_0_0" placeholder="Choice A" required>
-        <input type="text" name="choice_0_1" placeholder="Choice B" required>
-        <input type="text" name="choice_0_2" placeholder="Choice C" required>
-        <input type="text" name="choice_0_3" placeholder="Choice D" required>
-        </p>
-    </div>
-    <div>
-        <label>Correct answer</label>
-            <!-- value can be 0-3 or 1-4; backend normalizes -->
-            <p>
-            A <input type="radio" name="correct_0" value="0" required> 
-            B <input type="radio" name="correct_0" value="1"> 
-            C <input type="radio" name="correct_0" value="2"> 
-            D <input type="radio" name="correct_0" value="3"> 
-            </p>
-    </div>
+      <div>
+          <label>Choices</label>
+          <p>
+          <input type="text" name="choice_0_0" placeholder="Choice A" required>
+          <input type="text" name="choice_0_1" placeholder="Choice B" required>
+          <input type="text" name="choice_0_2" placeholder="Choice C" required>
+          <input type="text" name="choice_0_3" placeholder="Choice D" required>
+          </p>
+      </div>
+      <div>
+          <label>Correct answer</label>
+              <!-- value can be 0-3 or 1-4; backend normalizes -->
+              <p>
+              A <input type="radio" name="correct_0" value="0" required> 
+              B <input type="radio" name="correct_0" value="1"> 
+              C <input type="radio" name="correct_0" value="2"> 
+              D <input type="radio" name="correct_0" value="3"> 
+              </p>
+      </div>
 </div>
   <!-- Repeat blocks for question_1, choice_1_0..choice_1_3, correct_1, etc. -->
   <button type="submit">Save questions</button>
