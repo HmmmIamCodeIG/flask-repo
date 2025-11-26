@@ -19,10 +19,8 @@
     {% for q in quizzes %}
     <!-- quizzes display-->
       <label class="quiz-card" style="display:flex;align-items:center;gap:12px;cursor:pointer;">
-        <!-- Disabled until delete mode activated -->
-        <input type="radio" name="quiz_id" value="{{ q['id'] }}" {% if loop.first %}required{% endif %} disabled>
+        <input type="radio" name="quiz_id" value="{{ q['id'] }}" {% if loop.first %}required{% endif %}>
         <span>
-          <!-- Quiz title + metadata -->
           <div>{{ q['title'] }}</div>
           {% if q['numQuestions'] is not none %}
             <div class="quiz-meta">{{ q['numQuestions'] }} questions</div>

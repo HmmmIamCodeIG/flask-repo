@@ -554,19 +554,19 @@ def sdlc():
 @app.route('/delete_quiz', methods=['POST'])
 @login_required
 def delete_quiz():
-    quiz_id = request.form.get('quiz_id')
+    quiz_id_raw = request.form.get('quiz_id')
+    if not quiz_id_raw:
+        flash('Please select a quiz to delete.', 'error')
+        return redirect(url_for('select_quiz'))
     try:
-        quiz_id = int(quiz_id)
+        quiz_id = int(quiz_id_raw)
     except (TypeError, ValueError):
         flash('Invalid quiz ID.', 'error')
-        return redirect(url_for('quizsetup'))
-    
+        return redirect(url_for('select_quiz'))
     conn = get_db_connection()
     cursor = conn.cursor()
-    # delete questions associated with the quiz
-    cursor.execute("SELECT id FROM Quizzes WHERE id = ?", (quiz_id,))
-    # delete the quiz itself
     cursor.execute("DELETE FROM Quizzes WHERE id = ?", (quiz_id,))
+    cursor.execute("DELETE FROM Questions WHERE quiz_id = ?", (quiz_id,))
     conn.commit()
     conn.close()
     flash('Quiz deleted successfully.', 'success')

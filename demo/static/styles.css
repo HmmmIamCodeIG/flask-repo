@@ -265,7 +265,7 @@ img {
     margin: 0 auto;
 }
 
-/* Quizz specific CSS */
+/* Quiz specific CSS */
 
 .feedback {
     background: #ffeaea;
@@ -537,6 +537,14 @@ label {
 
 .slider:checked::before {
     transform: translateX(26px);
+}
+
+.delete-form .quiz-card {
+    cursor: pointer; /* was default; allow click always */
+}
+
+.delete-form.delete-on .quiz-card {
+    cursor: pointer;
 }
 
 /** SDLC page specific CSS **/
