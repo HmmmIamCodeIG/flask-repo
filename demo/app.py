@@ -154,7 +154,7 @@ def register():
 
     return render_template('register.html')
 
-### progress log routes ###
+### PROGRESS LOG ROUTES ###
 
 @app.route('/add_progress', methods=['GET', 'POST'])
 @login_required
@@ -300,12 +300,13 @@ def quizzes():
 @login_required
 def quizzesmenu():
     # File-based quizzes
-    quiz_files = [f for f in os.listdir('.') if f.endswith('_quizzes.txt')]
-    quiz_options = [f.replace('_quizzes.txt', '') for f in quiz_files]
+    quiz_files = [f for f in os.listdir('.') if f.endswith('_quizzes.txt')] # list quiz files
+    quiz_options = [f.replace('_quizzes.txt', '') for f in quiz_files] # extract quiz names
 
     # Custom quizzes from DB
     conn = get_db_connection()
     cursor = conn.cursor()
+    # fetch all custom quizzes
     cursor.execute("SELECT id, title, description, numQuestions FROM Quizzes ORDER BY id DESC")
     quizzes = cursor.fetchall()
     conn.close()
@@ -478,7 +479,7 @@ def questionsCustomSetup():
     # fetch quiz details
     cursor.execute("SELECT id, title, numQuestions FROM Quizzes WHERE id = ?", (quiz_id,))
     quiz_data = cursor.fetchone()
-    
+
     # if no quiz found, redirect to quiz setup
     if not quiz_data:
         conn.close()
@@ -549,6 +550,28 @@ def select_quiz():
 @login_required
 def sdlc():
     return render_template('SDLC.html')
+
+@app.route('/delete_quiz', methods=['POST'])
+@login_required
+def delete_quiz():
+    quiz_id = request.form.get('quiz_id')
+    try:
+        quiz_id = int(quiz_id)
+    except (TypeError, ValueError):
+        flash('Invalid quiz ID.', 'error')
+        return redirect(url_for('quizsetup'))
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    # delete questions associated with the quiz
+    cursor.execute("SELECT id FROM Quizzes WHERE id = ?", (quiz_id,))
+    # delete the quiz itself
+    cursor.execute("DELETE FROM Quizzes WHERE id = ?", (quiz_id,))
+    conn.commit()
+    conn.close()
+    flash('Quiz deleted successfully.', 'success')
+    return redirect(url_for('select_quiz'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -54,10 +54,17 @@
 		<li>Security measures (password hashing, SQL parameterisation) are implemented and functional.</li>
 		<li>The application performs reliably under normal usage without errors or crashes.</li>
 	</ul>
+
+	<h3>Waterfall Model and Agile Method Uses</h3>
+	<ul>
+		<li>Waterfall Model: Used for initial planning, requirements gathering, and design phases to establish a clear project scope and structure.</li>
+		<li>Agile Methodology: Employed during development and testing phases, allowing for an iterative progress and regular feedback, with adaptability to changes and allowing for improvements based on testing outcomes with my PWA.</li>
+		<li>Waterfall provided a solid foundation at the start, while Agile enabled for flexibility and responsiveness during coding and refinement.</li>
+	</ul>
 </textbubbles>
 
 <textbubbles>
-<h2>Design Rationale</h2>
+<h2>Determining Specifications</h2>
 <ul>
 	<li><b>Simplicity:</b> A minimal starter app focused on clarity for learning and extension.</li>
 	<li><b>Modularity:</b> Separate templates and static files for easy modification.</li>
@@ -226,7 +233,7 @@
 </ul>
 
 <h3>Results</h3>
-<img src="{{ url_for('static', filename='sprites/results.png') }}" alt="testing results example">
+<img src="{{ url_for('static', filename='sprites/result.png') }}" alt="testing results example">
 </textbubbles>
 
 <textbubbles>
@@ -234,6 +241,13 @@
 <h4>Testing For Security Risks — Bandit</h4>
 <p>
 	Bandit is a security linter for Python code that identifies common security issues. It scans the codebase for potential vulnerabilities and provides recommendations for remediation. By running Bandit on my app.py, it allows for an automatic scan of the Flask project for common security vulnerabilities. Running Bandit allowed me to identify weak points in the codebase early and ensure safer handling of user input, sessions, and database interactions, such as identifying that the debug mode being set as true allows a potential injection point. 
+</p>
+</textbubbles>
+
+<textbubbles>
+<h4>Evaluation</h4>
+<p>
+	Overall, the project managed to successfully meet the initial specificiations and requirements outlined in the SDLC document. The core functionalities, including the user authentication system, quiz creation and management, flashcard functions and progress logging were implemented effectively. The next steps would be to further improve the user interface for better usuability, cleaning up the codebase for maintainability, and adding more features such as analytics and additional quiz subjects. Security measures were also successfully implemented, transitioning from insecure practices to more secure methods using password hashing and parameterised queries. Testing confirmed that the application performs reliably under normal usage without errors or crashes, fulfilling the acceptance criteria set.
 </p>
 </textbubbles>
 {% endblock %}

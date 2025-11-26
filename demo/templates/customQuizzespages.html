@@ -2,17 +2,43 @@
 {% block content %}
 <h1>View Custom Quizzes</h1>
 <h2>Custom Quizzes</h2>
+
 {% if quizzes and quizzes|length > 0 %}
+  <!-- Delete mode toggle -->
+  <div class="delete-toggle">
+    <input type="checkbox" id="delete-toggle-checkbox" class="slider" aria-label="Toggle delete mode">
+    <label for="delete-toggle-checkbox"></label>
+    <span id="delete-mode-status">Delete mode is OFF</span>
+  </div>
+  <!-- Browse quizzes list -->
+  <form method="POST" action="{{ url_for('delete_quiz') }}" class="delete-form"
+        onsubmit="return confirm('Delete the selected quiz? This cannot be undone.');">
+    
+  <!-- Form that submits the selected quiz_id to the delete_quiz route -->
+  <!-- Confirmation prevents accidental deletion -->
     {% for q in quizzes %}
-        <a class="quiz-card" href="{{ url_for('quizzes', quiz_id=q['id']) }}">
+    <!-- quizzes display-->
+      <label class="quiz-card" style="display:flex;align-items:center;gap:12px;cursor:pointer;">
+        <!-- Disabled until delete mode activated -->
+        <input type="radio" name="quiz_id" value="{{ q['id'] }}" {% if loop.first %}required{% endif %} disabled>
+        <span>
+          <!-- Quiz title + metadata -->
           <div>{{ q['title'] }}</div>
           {% if q['numQuestions'] is not none %}
             <div class="quiz-meta">{{ q['numQuestions'] }} questions</div>
           {% endif %}
-        </a>
+        </span>
+      </label>
     {% endfor %}
+    <!-- button to delete selected quiz -->
+    <div class="delete-actions">
+      <button type="submit" id="delete-btn" class="btn btn-danger" disabled>Delete selected</button>
+    </div>
+  </form>
+
 {% else %}
-    <p>No custom quizzes yet.</p>
+  <p>No custom quizzes yet.</p>
 {% endif %}
 <script src="{{ url_for('static', filename='quiz.js') }}"></script>
+<script src="{{ url_for('static', filename='toggle.js') }}"></script>
 {% endblock %}
