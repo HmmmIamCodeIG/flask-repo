@@ -220,6 +220,7 @@ def quizzes():
     questions = []
     quiz_id = request.args.get('quiz_id')
     selected_quiz = request.form.get('quiz') or request.args.get('quiz')
+
     # custom quiz from database
     if quiz_id:
         # fetch quiz questions from database
@@ -232,7 +233,7 @@ def quizzes():
         if not quiz_questions:
             conn.close()
             flash('This quiz has no questions yet. Please add questions or pick another quiz.', 'error')
-            return redirect(url_for('select_quiz'))
+            return redirect(url_for('quizzesmenu'))
         # structure quiz questions
         for q in quiz_questions:
             choices = [q['choice1'], q['choice2'], q['choice3'], q['choice4']]
@@ -247,6 +248,7 @@ def quizzes():
         row = cursor.fetchone()
         quiz_title = row['title'] if row else 'Quiz'
         conn.close()
+
     # File-based quiz
     elif selected_quiz:
         # open corresponding quiz file
@@ -269,6 +271,7 @@ def quizzes():
                 })
         # set quiz title
         quiz_title = selected_quiz
+
     # Handle POST
     if request.method == 'POST':
         num_questions = len(questions)
@@ -281,6 +284,7 @@ def quizzes():
         feedback = f"You got {correct} correct out of {num_questions}!"
         # Store results in database
         storequizresults(current_user.id, quiz_title, correct, num_questions)
+
     # Render quiz template
     return render_template('quizzes.html',
                             feedback=feedback,
@@ -451,8 +455,8 @@ def quizsetup():
 def questionsCustomSetup():
     conn = get_db_connection()
     cursor = conn.cursor()
-    # Determine quiz_id from POST, then query string, then session
 
+    # Determine quiz_id from POST, then query string, then session
     quiz_id = None
     if request.method == 'POST':
         quiz_id = request.form.get('quiz_id')
