@@ -7,10 +7,16 @@ import logging # library for logging security events and errors
 import bleach # library for sanitisation
 from email_validator import validate_email, EmailNotValidError # library for email validation
 from zxcvbn import zxcvbn # library for password strength estimation
+import os 
+from dotenv import load_dotenv # use more secure session key
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'super-secret-key'  
+load_dotenv() # loads .env file
+app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 # For sessions and flash messages
+if not app.config['SECRET_KEY']:
+    raise ValueError("No FLASK_SECRET_KEY set in environment or .env file!")
+
 
 # initialise flask-login
 login_manager = LoginManager()
@@ -64,7 +70,20 @@ def validate_password_strength(password: str) -> tuple[bool, str]:
 def clean_log_title(s: str) -> str:
     # strip dangerous cotnent. alllow=HTML removes all tags
     s = s.strip()
-    return bleach.clean(s, tags=[], strip=True)
+    cleaned = bleach.clean(s, tags=[], strip=True)
+    return cleaned[:100]
+
+def clean_log_details(s: str) -> str:
+    # strip dangerous content. 
+    s = s.strip()
+    # allow very limited formatting (adjust tags as needed)
+    return bleach.clean(
+        s,
+        tags=['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'u'],
+        attributes={},
+        strip=True
+    )
+    
 
 ### AUTHENTICATION ROUTES ###
 
@@ -225,8 +244,12 @@ def add_progress():
     # on POST, get form data and insert new progress log into database
     if request.method == 'POST':
         date = request.form['date']
-        title = request.form['title']
-        details = request.form['details']
+        rawTitle = request.form['title']
+        rawDetails = request.form['details']
+
+        title = clean_log_title(rawTitle)
+        details = clean_log_title(rawDetails)
+        
 
         conn = get_db_connection()
         cursor = conn.cursor()
