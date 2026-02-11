@@ -3,6 +3,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3, random, os, re
 from flask_login import login_required, LoginManager, UserMixin, login_user, logout_user, current_user
 from datetime import date
+import logging # library for logging security events and errors
+import bleach # library for sanitisation
+from email_validator import validate_email, EmailNotValidError # library for email validation
+from zxcvbn import zxcvbn # library for password strength estimation
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'super-secret-key'  
@@ -21,6 +25,46 @@ class User(UserMixin):
         self.id = id
         self.username = username
         self.hashed_password = hashed_password
+
+# run user input to remove dangerous content
+def clean_input(s: str, allow_html: bool = False) -> str:
+    # strip dangerous content. allow_html=False removes all tags
+    s = s.strip()
+    if allow_html:
+        # allow very limited formatting (adjust tags as needed)
+        return bleach.clean(
+            s,
+            tags=['p', 'br', 'strong', 'em'],
+            attributes={},
+            strip=True
+        )
+    else:
+        # remove all html 
+        return bleach.clean(s, tags=[], strip=True)
+    
+# check if email is a valid address instead of awb.com
+def validate_email_strict(email: str) -> tuple[bool, str]:
+    try:
+        validate_email(email, check_deliverability=False)
+        return True, ""
+    except EmailNotValidError as e:
+        return False, str(e)
+    
+# implement password rules 
+def validate_password_strength(password: str) -> tuple[bool, str]:
+    if len(password) < 10:
+        return False, "Password must be at least 10 characters"
+    result = zxcvbn(password)
+    if result['score'] < 3:
+        warning = result['feedback']['warning'] or "Password is too weak"
+        suggestions = " ".join(result['feedback']['suggestions'])
+        return False, f"{warning} {suggestions}".strip()
+    return True, "Strong password"
+
+def clean_log_title(s: str) -> str:
+    # strip dangerous cotnent. alllow=HTML removes all tags
+    s = s.strip()
+    return bleach.clean(s, tags=[], strip=True)
 
 ### AUTHENTICATION ROUTES ###
 
@@ -98,9 +142,16 @@ def register():
     # Registration logic
     # on POST, get form data and insert new user into database
     if request.method == 'POST':
-        username = request.form['username']
-        displayName = request.form['display_name']
-        email = request.form['email']
+        raw_username = request.form.get('username', '').strip()
+        raw_displayName = request.form.get('displayName', '').strip()
+        raw_email = request.form['email'].strip()
+        username = clean_input(raw_username)
+        displayName = clean_input(raw_displayName)
+        email = clean_input(raw_email)
+
+        # username = request.form['username']
+        # displayName = request.form['display_name']
+        # email = request.form['email']
         password = request.form['password']
         confirmPassword = request.form['confirm_password']
         
@@ -108,9 +159,21 @@ def register():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        # validate password
         if password != confirmPassword:
             flash('Passwords do not match', 'error')
             return redirect(url_for('register'))
+        pw_valid, pw_msg = validate_password_strength(password)
+        if not pw_valid:
+            flash(pw_msg, 'error')
+            return redirect(url_for('register'))
+        
+        # validate email
+        email_valid, email_msg = validate_email_strict(email)
+        if not email_valid:
+            flash(email_msg or "Invalid email address", 'error')
+            return redirect(url_for('register'))
+        
         try:       
             # insecure way (vulnerable to SQL injection) for demonstration purposes only
             '''cursor.execute(
