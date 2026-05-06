@@ -7,6 +7,12 @@ import logging # library for logging security events and errors
 import bleach # library for sanitisation
 from email_validator import validate_email, EmailNotValidError # library for email validation
 from zxcvbn import zxcvbn # library for password strength estimation
+from forms import RegistrationForm, LoginForm, AddProgressForm # importing classes from forms
+from flask_wtf import FlaskForm # a library to allow the use of wtforms
+from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateField # fields 
+from wtforms.validators import DataRequired, Length, Email # validation types within forms
+from flask_wtf.csrf import CSRFProtect # Allowing CSRF protection 
+from contextlib import contextmanager 
 import os 
 from dotenv import load_dotenv # use more secure session key
 
@@ -17,6 +23,8 @@ app.config['SECRET_KEY'] = os.getenv('FLASK_SECRET_KEY')
 if not app.config['SECRET_KEY']:
     raise ValueError("No FLASK_SECRET_KEY set in environment or .env file!")
 
+# Enable CSRF Protection
+crsf = CSRFProtect(app)
 
 # initialise flask-login
 login_manager = LoginManager()
@@ -30,7 +38,6 @@ class User(UserMixin):
     def __init__(self, id, username, hashed_password):
         self.id = id
         self.username = username
-        self.hashed_password = hashed_password
 
 # run user input to remove dangerous content
 def clean_input(s: str, allow_html: bool = False) -> str:
@@ -83,69 +90,73 @@ def clean_log_details(s: str) -> str:
         attributes={},
         strip=True
     )
-    
 
 ### AUTHENTICATION ROUTES ###
 
 # load user from database
 @login_manager.user_loader
 def load_user(user_id):
-    # fetch user from database
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    # secure way using parameterised queries
-    # fetch user from database using parameterised query to avoid SQL injection
-    cursor.execute("SELECT id, username, hashed_password FROM Users WHERE id = ?", (user_id,))
-    row = cursor.fetchone()
-    conn.close()
-    if row:
-        return User(id=row['id'], username=row['username'], hashed_password=row['hashed_password'])
-    return None
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT id, username FROM Users WHERE id = ?',
+                (user_id,)
+            )
+            user = cursor.fetchone()
 
+        if user:
+            return User(id=user['id'], username=user['username'])
+        return None
+
+    except Exception as e:
+        # Log the error in development, but don't expose it to user
+        print(f"Error loading user {user_id}: {e}")  # Replace with proper logging later
+        return None
+    
 # Database connection function
+@contextmanager
 def get_db_connection():
     conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row  
-    # Allows accessing columns by name
-    return conn
+    conn.row_factory = sqlite3.Row # Allows access to columns by name
+    # to close database after processinng has finished
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    '''if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))'''
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-
-        # insecure way (vulnerable to SQL injection) for demonstration purposes only
-        '''conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(f"SELECT id, username, password FROM Users WHERE username = '{username}'")
-        user = cursor.fetchone()
-        conn.close()'''
-        # vulnerable to SQL injection as it directly inserts user input into the SQL quer
-
-        # secure way using parameterised queries
-        # fetch user from database using parameterised query to avoid SQL injection
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, username, hashed_password FROM Users WHERE username = ?", (username,))
-        user = cursor.fetchone()
-        conn.close()
-
-        # verify password
-        if user and check_password_hash(user['hashed_password'], password):
-            session['user_id'] = user['id']
-            # keep flask-login and session in sync
-            login_user(User(id=user['id'], username=user['username'], hashed_password=user['hashed_password']))
-            flash('Login successful!', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Invalid username or password', 'error')
-            return redirect(url_for('login'))
+    if current_user.is_authenticated: # iif user logged in, send to dashboard
+        return redirect(url_for('dashboard'))
+    
+    form = LoginForm() # a reference to the login form calss - creating a loginform object
+    
+    if form.validate_on_submit(): # run the following code if the data in it is valid
+        username = form.username.data.strip() # cleaning the username and storing it
+        password = form.password.data
         
-    return render_template('login.html')
+        try: 
+            with get_db_connection as conn:
+                cursor = conn.cursor()
+                # check if use exists - if so return id, username, hashed password
+                cursor.execute("SELECT id, username, hashed_password FROM Users WHERE username = ?", (username,))
+                user_row = cursor.fetchedone() # storing the first result 
 
+            # if not null and passwords match 
+            if user_row and check_password_hash(user_row['hashed_password'], password):
+                user = User(id=user_row['id'], username=user_row['username'])
+                login_user(user)
+                flash('Login Successful', 'success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Invalid username or password.', 'error')
+
+        except Exception as e:
+            flash('An error occurred during login. Please try again.', 'error')
+
+    return render_template('login.html', form=form)
+            
 @app.route('/logout')
 @login_required
 def logout():
@@ -158,142 +169,92 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    # Registration logic
-    # on POST, get form data and insert new user into database
-    if request.method == 'POST':
-        raw_username = request.form.get('username', '').strip()
-        raw_displayName = request.form.get('displayName', '').strip()
-        raw_email = request.form['email'].strip()
-        username = clean_input(raw_username)
-        displayName = clean_input(raw_displayName)
-        email = clean_input(raw_email)
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
 
-        # username = request.form['username']
-        # displayName = request.form['display_name']
-        # email = request.form['email']
-        password = request.form['password']
-        confirmPassword = request.form['confirm_password']
-        
-        # secure way using parameterised queries
-        conn = get_db_connection()
-        cursor = conn.cursor()
+    form = RegistrationForm()
 
-        # validate password
-        if password != confirmPassword:
-            flash('Passwords do not match', 'error')
-            return redirect(url_for('register'))
-        pw_valid, pw_msg = validate_password_strength(password)
-        if not pw_valid:
-            flash(pw_msg, 'error')
-            return redirect(url_for('register'))
-        
-        # validate email
-        email_valid, email_msg = validate_email_strict(email)
-        if not email_valid:
-            flash(email_msg or "Invalid email address", 'error')
-            return redirect(url_for('register'))
-        
-        try:       
-            # insecure way (vulnerable to SQL injection) for demonstration purposes only
-            '''cursor.execute(
-                f"INSERT INTO Users (username, password, email, display_name) VALUES ('{username}', '{password}', '{email}', '{displayName}')"
-            )'''
-            
-            # secure way using parameterised queries
-            # plaintext passwords are insecure
-            hashed_pw = generate_password_hash(password)
-            # inserted_password = password  
-            cursor.execute(
-                "INSERT INTO Users (username, hashed_password, email, display_name) VALUES (?, ?, ?, ?)",
-                (username, hashed_pw, email, displayName)
-            )
-            conn.commit()
-            cursor.execute("SELECT id, username, hashed_password FROM Users WHERE username = ?", (username,))
-            user = cursor.fetchone()
-            # insecure way (vulnerable to SQL injection) for demonstration purposes only
-            '''cursor.execute(
-                f"INSERT INTO Users (username, password, email, display_name) VALUES ('{username}', '{password}', '{email}', '{displayName}')"
-            )'''
-            # this is insecure as it directly inserts user input into the SQL query, allowing for SQL injection
+    if form.validate_on_submit():
+        username = clean_input(form.username.data)
+        displayName = clean_input(form.displayName.data)
+        email = clean_input(form.email.data)
+        password = form.password.data
 
-            # keep flask-login and session in sync
-            login_user(User(id=user['id'], username=user['username'], hashed_password=user['hashed_password']))
-            session['user_id'] = user['id']
-            # success
-            flash('Registration successful!', 'success')
-            conn.close()
-            return redirect(url_for('dashboard'))
-        # username or email already exists
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                hashed_password = generate_password_hash(password)
+
+                cursor.execute(
+                    """INSERT INTO Users (username, hashed_password, email, display_name)
+                       VALUES (?, ?, ?, ?)""",
+                    (username, hashed_password, email, displayName)
+                )
+                conn.commit() # finalise data in table / saw e data 
+
+                cursor.execute("SELECT id, username FROM Users WHERE username = ?", (username,))
+                user_row = cursor.fetchone()
+
+            if user_row:
+                new_user = User(id=user_row['id'], username=user_row['username'])
+                login_user(new_user)
+                flash('Registration successful! Welcome!', 'success')
+                return redirect(url_for('dashboard'))
+
         except sqlite3.IntegrityError:
-            conn.close()
-            flash('Username or email already exists', 'error')
-            return redirect(url_for('register'))
-        # other errors
+            flash('Username or email already exists.', 'error')
         except Exception as e:
-            conn.close()
-            flash(f'Error: {str(e)}', 'error')
-            return redirect(url_for('register'))
+            flash('An unexpected error occurred. Please try again.', 'error')
 
-    return render_template('register.html')
-
+    return render_template('register.html', form=form)
 ### PROGRESS LOG ROUTES ###
+
 
 @app.route('/add_progress', methods=['GET', 'POST'])
 @login_required
 def add_progress():
-    # on POST, get form data and insert new progress log into database
-    if request.method == 'POST':
-        date = request.form['date']
-        rawTitle = request.form['title']
-        rawDetails = request.form['details']
+    form = AddProgressForm()
 
-        title = clean_log_title(rawTitle)
-        details = clean_log_title(rawDetails)
-        
+    if form.validate_on_submit():
+        date_str = form.date.data.strftime('%Y-%m-%d')   # Convert date to string
+        title = clean_log_title(form.title.data)
+        details = clean_log_details(form.details.data)
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
         try:
-            # Using parameterised query to avoid SQL injection
-            cursor.execute(
-                f"INSERT INTO ProgressLogs (user_id, date, title, details) VALUES (?, ?, ?, ?)",
-                (session['user_id'], date, title, details)
-            )
-            # insecure way (vulnerable to SQL injection) for demonstration purposes only
-            '''cursor.execute(
-                f"INSERT INTO ProgressLogs (user_id, date, title, details) VALUES ({session['user_id']}, '{date}', '{title}', '{details}')"
-            )'''
-            # this is insecure as it directly inserts user input into the SQL query, allowing for SQL injection
-            conn.commit()
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    "INSERT INTO ProgressLogs (user_id, date, title, details) VALUES (?, ?, ?, ?)",
+                    (current_user.id, date_str, title, details)
+                )
+                conn.commit()
+
             flash('Progress log added successfully!', 'success')
-            return redirect(url_for('dashboard'))  
-        # incomplete form data
-        except sqlite3.IntegrityError:
-            conn.close()
-            flash('Please enter a complete log.', 'error')
-            return redirect(url_for('add_progress'))
-        # other errors
+            return redirect(url_for('view_progress'))
+
         except Exception as e:
-            conn.close()
-            flash(f'Error: {str(e)}', 'error')
-            return redirect(url_for('add_progress'))
-        
-    return render_template('addProgress.html')
+            flash('An error occurred while saving your progress.', 'error')
+
+    return render_template('addProgress.html', form=form, username=current_user.username)
 
 @app.route('/view_progress', methods=['GET', 'POST'])
 @login_required
 def view_progress():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT date, title, details FROM ProgressLogs WHERE user_id = ? ORDER BY date ASC",
+                (current_user.id,)
+            )
+            posts = cursor.fetchall()
 
-    # fetch all progress logs for the logged-in user
-    cursor.execute('SELECT * FROM ProgressLogs WHERE user_id = ? ORDER BY date ASC', (session["user_id"],))
-    posts = cursor.fetchall()
-    conn.close()
-    # display no posts, if user has none 
-    # display all posts if user has - dynamic
-    return render_template('viewProgress.html', posts = posts)
+        return render_template('viewProgress.html', posts=posts, username=current_user.username)
 
+    except Exception as e:
+        flash('Error loading your progress logs.', 'error')
+        return redirect(url_for('dashboard'))
+    
 @app.route('/')
 @login_required
 def dashboard():
