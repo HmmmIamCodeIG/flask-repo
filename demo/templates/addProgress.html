@@ -2,7 +2,7 @@
 {% block content %}
 <h1>Add Your Progress</h1>
     <form method="POST" action="{{ url_for('add_progress') }}">
-        {{ form.crsf_token }}
+        {{ form.csrf_token }}
         <p>Date
         <input type="date" name="date" required></p>
         <p>Title

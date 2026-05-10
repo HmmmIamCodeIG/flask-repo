@@ -3,7 +3,7 @@
 <h1>Register Here!</h1>
 <h3>Enter Your Details to Create an Account</h3>
     <form method="POST" action="{{ url_for('register') }}">
-        {{ form.crsf_token }}
+        {{ form.csrf_token }}
         <p>Username
         <input type="text" name="username" placeholder="Username" required></p>
         <p>Display Name
