@@ -4,17 +4,11 @@
 <h3>Enter Your Details to Create an Account</h3>
     <form method="POST" action="{{ url_for('register') }}">
         {{ form.csrf_token }}
-        <p>Username
-        <input type="text" name="username" placeholder="Username" required></p>
-        <p>Display Name
-        <input type="text" name="display_name" placeholder="Display Name"></p>
-        <p>Email
-        <input type="email" name="email" placeholder="Email" required></p>
-        <p>Password
-        <input type="password" name="password" placeholder="Password" required></p>
-        <p>Confirm Password
-        <input type="password" name="confirm_password" placeholder="Confirm Password" required></p>
-        <button type="submit">Register</button>
-        <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a>.</p>
+        <p>Username {{ form.username() }}</p>
+        <p>Display Name {{ form.displayName() }}</p>
+        <p>Email {{ form.email() }}
+        <p>Password {{ form.password()}}</p>
+        <p>Confirm Password {{ form.confirmPassword() }}
+        <p>{{ form.submit }}</p>
     </form>
 {% endblock %}

@@ -7,12 +7,24 @@
                     <th>DATE</th>
                     <th>TITLE</th>
                     <th>DETAILS</th>
+                    <th>IMAGE</th>
                 </tr>
             {% for post in posts %}
                 <tr>
                     <td>{{ post.date }}</td>
                     <td>{{ post.title }}</td>
-                    <td>{{ post.details }}</td>
+                    <td>{{ post.details }}</td>                
+                    <td>
+                        <img>
+                        {% if post.image_path %}
+                            <img src="{{ url_for('static', filename=post.image_path) }}" 
+                                alt="Progress Image" 
+                                width="150">
+                        {% else %}
+                            No image
+                        {% endif %}
+                        </img>
+                    </td>
                 </tr>
             {% endfor %}
         </table>

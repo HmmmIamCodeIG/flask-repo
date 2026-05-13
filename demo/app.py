@@ -7,7 +7,7 @@ import logging  # library for logging security events
 import bleach  # library for sanitisation of data
 from email_validator import validate_email, EmailNotValidError
 from zxcvbn import zxcvbn  # password rules
-from forms import RegistrationForm, LoginForm, AddProgressForm  # importing classes from forms file
+from forms import RegistrationForm, LoginForm, AddProgressForm, QuoteForm # importing classes from forms file
 from flask_wtf import FlaskForm  # library to allow use of wtforms
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField, DateField  # fields for forms
 from wtforms.validators import DataRequired, Length, Email  # validati0on types within forms
@@ -164,7 +164,6 @@ def add_progress():
         else:
             print("DEBUG: No image file was uploaded or filename was empty")
 
-
         try:
             with get_db_connection() as conn:
                 cursor = conn.cursor()
@@ -302,6 +301,17 @@ def view_progress():
     except Exception as e:
         flash('Error loading your progress logs.', 'error')
         print(f"Error loading progress: {e}")
+
+@app.route("/quote_stock")
+@login_required
+def quote_stock():
+    form = QuoteForm()
+    
+    if form.validate_on_submit():
+        tickerName = clean_log_title(form.tickerName.data)
+    
+    return render_template('quote_Stock.html', form=form)
+
 
 """
 ### main quiz routes ###

@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Stock Information</h1>
+<p>Get your stock information</p>
+    <form method="POST" action="{{ url_for('quote_stock') }}">
+        {{ form.csrf_token }}
+        <p>Stock Ticker {{form.tickerName() }}</p>
+        <p>{{ form.submit }}</p>
+    </form>
+{% endblock %}

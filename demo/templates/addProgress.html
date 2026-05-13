@@ -1,15 +1,12 @@
 {% extends 'base.html' %}   
 {% block content %}
 <h1>Add Your Progress</h1>
-    <form method="POST" action="{{ url_for('add_progress') }}">
+    <form method="POST" enctype="multipart/form-data">        
         {{ form.csrf_token }}
-        <p>Date
-        <input type="date" name="date" required></p>
-        <p>Title
-        <input type="text" name="title" placeholder="Title" required></p>
-        <p>Details
-        <textarea class="large-input" rows="4" cols="50" name="details" placeholder="Details" required></textarea>
-        </p>
-        <button type="submit">Post Progress</button>
+        <p>Date {{ form.date() }}</p>
+        <p>Title {{ form.title() }}</p>
+        <p>Details {{ form.details() }}</p>
+        <p>Image {{ form.image() }}</p>
+        <p>{{ form.submit }}</p>
     </form>
 {% endblock %}
