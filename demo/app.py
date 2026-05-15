@@ -13,6 +13,7 @@ from wtforms import StringField, PasswordField, SubmitField, TextAreaField, Date
 from wtforms.validators import DataRequired, Length, Email  # validati0on types within forms
 from flask_wtf.csrf import CSRFProtect  # allowing CSRF protection
 from contextlib import contextmanager
+from yfinance import yf
 import os
 from dotenv import load_dotenv  # use more secure session key
 from datetime import datetime
@@ -123,6 +124,25 @@ def get_db_connection():
         yield conn  # keep connection open while actively accessing db
     finally:  # when finished        
         conn.close()
+
+def get_stock_info(ticker: str):
+    if not ticker or len(ticker.strip()) < 1: # if the ticker name is too short
+        return None, None, "Please enter a valid ticker symbol"
+    
+    ticker = ticker.upper().strip()
+
+    stock = yf.ticker(ticker)    
+
+    try:   
+        stock = yf.ticker(ticker)
+        info = stock.info
+
+        # current price
+        current_pruce = None
+        for key in ['currentPrice', 'regularMarketPrice', 'price']:
+            if info.get(key):
+                current_price = info.get(key)
+                break
 
 #endregion
 
@@ -308,10 +328,21 @@ def quote_stock():
     form = QuoteForm()
     
     if form.validate_on_submit():
+        stock_data = None
+        chart_data = None
+        error = None
         tickerName = clean_log_title(form.tickerName.data)
-    
-    return render_template('quote_Stock.html', form=form)
 
+        if request.method == 'POST':
+            tickerName = request.form.get('tickerName', '').strip()
+
+        if tickerName:
+            stock_data, chart_data, error = get_stock_info(tickerName)
+        else: 
+            error = "Please enter a stock ticker (e.g. AAPL)"
+        
+    
+    return render_template('quote_Stock.html', form=form, stock_data=stock_data, chart_data=chart_data, error=error, tickerName=tickerName, username=current_user.username)
 
 """
 ### main quiz routes ###
