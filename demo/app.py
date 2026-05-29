@@ -361,7 +361,6 @@ def dashboard():
                 top_loser=None,
                 allocation_chart=""
             )
-    
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
