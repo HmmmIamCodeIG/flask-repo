@@ -16,10 +16,9 @@ from contextlib import contextmanager
 import yfinance as yf
 import os
 from dotenv import load_dotenv  # use more secure session key
-from datetime import datetime, timedelta
+from datetime import datetime
 import plotly.express as px
 import plotly.io as pio
-from MLdataCollection import get_stock_data as collect_stock_data
 
 #region init
 app = Flask(__name__)
@@ -137,7 +136,7 @@ def get_stock_info(ticker: str):
 
     try:
         stock = yf.Ticker(ticker)
-        info = stock.info # get the stock info from yfinance
+        info = stock.info
 
         # Current price -- get the first price found then exit loop
         current_price = None  # initialise current price
@@ -146,7 +145,6 @@ def get_stock_info(ticker: str):
                 current_price = info.get(key)
                 break
         
-        # compile all the stock data into a dictionary to be sent to the frontend
         stock_data = {
             'ticker': ticker,
             'name': info.get('longName') or info.get('shortName') or f"{ticker} Stock",
@@ -162,7 +160,6 @@ def get_stock_info(ticker: str):
         hist = stock.history(period="3mo")
         chart_data = None
 
-        # if historical data is available, prepare it for the frontend
         if not hist.empty:
             chart_data = {
                 'dates': hist.index.strftime('%Y-%m-%d').tolist(),
@@ -364,6 +361,7 @@ def dashboard():
                 top_loser=None,
                 allocation_chart=""
             )
+    
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -488,33 +486,12 @@ def quote_stock():
         
     # Check if the form has been submitted and passes all CSRF/validation checks
     if form.validate_on_submit():
-        tickerName = request.form.get('tickerName', '').strip().upper()
+        tickerName = request.form.get('tickerName', '').strip()
 
-        # if tickerName is provided, fetch stock data and prepare chart data
         if tickerName:
-            end_date = datetime.now().date()
-            start_date = end_date - timedelta(days=90) # get 3 months of historical data for chart
-            # call the function in MLdataCollection to get all the stock data, including historical data for the chart
-            stock_data = collect_stock_data(
-                tickerName,
-                start_date.isoformat(),
-                end_date.isoformat()
-            )
-
-            # if stock data is successfully retrieved, prepare the historical data for the chart
-            if stock_data:
-                # get the historical data from the stock_data dictionary and prepare it for the frontend
-                historical_data = stock_data.get('historical_data')
-                # if historical data is available, prepare it for the frontend
-                if historical_data is not None and not historical_data.empty:
-                    chart_data = {
-                        'dates': historical_data.index.strftime('%Y-%m-%d').tolist(),
-                        'close': historical_data['Close'].round(2).tolist()
-                    }
-            else:
-                print(f"Failed to retrieve stock data for {tickerName}.")
+            stock_data, chart_data, error = get_stock_info(tickerName) # if valid, call ticker info
         else:
-            print("No ticker name provided.") # trigger error message if no data is sent through
+            error = "Please enter a stock ticker symbol (e.g. AAPL)" # trigger error message if no data is sent through
 
     return render_template('quote_stock.html', form=form, stock_data=stock_data, chart_data=chart_data, error=error, tickerName=tickerName, username=current_user.username)
 

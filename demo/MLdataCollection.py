@@ -31,18 +31,6 @@ def get_stock_data(ticker, start_date, end_date):
               }
     """
     try:
-        # Validate ticker format
-        if not ticker or not isinstance(ticker, str):
-            print(f"Invalid ticker: {ticker}")
-            return None
-
-        # verify if the ticker is in the correct format 
-        # only allow alphabet, dashes and dots 
-        if not all(c.isalnum() or c in ['.', '-'] for c in ticker):
-            print(f"Ticker contains invalid characters: {ticker}")
-            return None
-        ticker = ticker.upper().strip()
-            
         stock = yf.Ticker(ticker)
         info = stock.info
         ticker_data = stock.history(start=start_date, end=end_date)
