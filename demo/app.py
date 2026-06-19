@@ -643,7 +643,6 @@ def sell_stock():
 
     return redirect(url_for('dashboard'))
 
-
 @app.route('/transactions')
 @login_required
 def transactions():
