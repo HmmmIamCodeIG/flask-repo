@@ -29,7 +29,6 @@ def volume_change_ratio(ticker):
         stock = yf.Ticker(ticker) # ticker initialisation
         hist = stock.history(period="5yr") 
         return hist["Volume"].pct_change().fillna(0)
-        # fillna(0) is used to replace the first value which will be NaN since there is no previous day to compare to, with 0 indicating no change in volume.
         # pandas has a inbuilt function to calculate percentage change apparently so that's simplified instead of:
         # volume_change_ratio = (current-volume - previous_volume) / previous_volume 
 
@@ -48,6 +47,7 @@ def returnWindow(ticker, window=5):
     returns:
         pandas DataFrame containing the stock data for the specified date range.
     """
+    # basic stuff to validate ticker
     if not ticker or len(ticker.strip()) < 1:
         return None 
     ticker = ticker.upper().strip()
@@ -62,6 +62,40 @@ def returnWindow(ticker, window=5):
         return hist_returns
     except Exception as e:
         print(f"An error occurred while fetching stock data for {ticker}: {e}")
+        return None
+
+
+def highLowDifference(ticker):
+    # Accept either a ticker symbol string or a yf.Ticker object
+    try:
+        # if the input is a string, create a yf.Ticker object.
+        # if it's already a yf.Ticker object use it directly
+        if isinstance(ticker, str):
+            ticker_obj = yf.Ticker(ticker)
+        else:
+            ticker_obj = ticker
+        hist = ticker_obj.history(period="6y", interval="1d") # sets period to 6 years since we need a year more of data to compare earlier dates
+        # finds highest and lowest price in the past year
+        hist["high"] = hist["High"].rolling(window=252, min_periods=1).max()
+        hist["low"] = hist["Low"].rolling(window=252, min_periods=1).min()
+
+        # calculates the position of the stock price within the 52 week range.
+        # finds the difference between current stock price and lowest stock price.
+        # divides that by difference between highest and lowest stock price to get value btwn 0 and 1
+        hist["range"] = ( # creates a value finding the current stock price's position 52 weeks 
+            (hist["Close"] - hist["low"]) /
+            (hist["high"] - hist["low"])
+        )
+        years_five = hist.index.max() - pd.DateOffset(years=5) # limits the data to 5 years
+        hist_5 = hist.loc[hist.index >= years_five].copy() # creates a new dataframe with only the last 5 years of data
+
+        # fill any missing values with 0 as it indicates a low end
+        if "range" in hist_5.columns:
+            price_range = (hist_5["high"] - hist_5["low"]).replace(0, np.nan)
+            hist_5["range"] = ((hist_5["Close"] - hist_5["low"]) / price_range).fillna(0)
+        return hist_5
+    except Exception as e:
+        print(f"An error occurred while calculating high-low difference for {ticker}: {e}")
         return None
 
 def get_stock_data(ticker):
@@ -83,17 +117,20 @@ def get_stock_data(ticker):
     try:
         tickerStock = yf.Ticker(ticker) # ticker initialisation
         hist = tickerStock.history(period=period) # fetch historical data for the specified period
-        volume_ratios = hist["Volume"].pct_change().fillna(0).replace([np.inf, -np.inf], np.nan) # calculate volume change ratio from the same history frame
-        returnWindow = hist['Close'].pct_change(periods=5).dropna() # calculate return over 5 day window from same history frame
-        # dropna used to remove the first 5 rows which will be NaN since there is no previous data to compare to for the first 5 days.
+        volume_ratios = hist["Volume"].pct_change().replace([np.inf, -np.inf], np.nan).fillna(0) # calculate volume change ratio from the same history frame
+        return_window = hist['Close'].pct_change(periods=5).replace([np.inf, -np.inf], np.nan).fillna(0)
+        # first five days have to be dropped because the return over 5 days cannot be calculated for those days as there is not enough historical data to compare to
+        high_low_diff = highLowDifference(ticker) # calculate the position of the stock price within the 52 week range
 
         dict_history = pd.DataFrame({
             'Close': hist['Close'],
             'Volume': hist['Volume'],
             'Volume Change Ratio': volume_ratios,
-            'Return Over 5 Days': returnWindow
+            'Return Over 5 Days': return_window,
+            'Position in 52 Week Range': high_low_diff['range'],
         })
-        print(dict_history)
+        dict_history = dict_history.replace([np.inf, -np.inf], np.nan).fillna(0)
+        return dict_history
     except Exception as e:
         print(f"an error occured when fetching stock data for {ticker}: {e}")
         return None 
