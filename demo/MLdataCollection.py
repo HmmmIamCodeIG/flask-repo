@@ -117,8 +117,8 @@ def get_stock_data(ticker):
     try:
         tickerStock = yf.Ticker(ticker) # ticker initialisation
         hist = tickerStock.history(period=period) # fetch historical data for the specified period
-        volume_ratios = hist["Volume"].pct_change().replace([np.inf, -np.inf], np.nan).fillna(0) # calculate volume change ratio from the same history frame
-        return_window = hist['Close'].pct_change(periods=5).replace([np.inf, -np.inf], np.nan).fillna(0)
+        volume_ratios = hist["Volume"].pct_change().replace([np.inf, -np.inf], np.nan) # calculate volume change ratio from the same history frame
+        return_window = hist['Close'].pct_change(periods=5).replace([np.inf, -np.inf], np.nan)
         # first five days have to be dropped because the return over 5 days cannot be calculated for those days as there is not enough historical data to compare to
         high_low_diff = highLowDifference(ticker) # calculate the position of the stock price within the 52 week range
 
@@ -129,7 +129,7 @@ def get_stock_data(ticker):
             'Return Over 5 Days': return_window,
             'Position in 52 Week Range': high_low_diff['range'],
         })
-        dict_history = dict_history.replace([np.inf, -np.inf], np.nan).fillna(0)
+        dict_history = dict_history.replace([np.inf, -np.inf], np.nan)
         return dict_history
     except Exception as e:
         print(f"an error occured when fetching stock data for {ticker}: {e}")

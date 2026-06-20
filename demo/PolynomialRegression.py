@@ -1,4 +1,5 @@
 import MLdataCollection
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,7 +7,7 @@ import joblib
 from pathlib import Path
 
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import PolynomialFeatures, StandardScaler
+from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
@@ -63,6 +64,13 @@ def polynomial_regression(ticker, degree=2):
     model = Ridge(alpha=ridge_alpha) if use_ridge else LinearRegression()
 
     # training the model
+    # if use_ridge:
+    #     model = Ridge(alpha=ridge_alpha)
+    #     print(f"   Using Ridge (alpha={ridge_alpha})")
+    # else:
+    #     model = LinearRegression()
+    #     print("   Using Linear Regression")
+
     model.fit(x_train_poly, y_train)
     print("Model training complete.")
 
@@ -70,7 +78,7 @@ def polynomial_regression(ticker, degree=2):
     feature_names = poly.get_feature_names_out() # get the names of the polynomial features for better interpretability
     coef_df = pd.DataFrame({
         'Feature': feature_names,
-        'Absolute Coefficient': np.abs(model.coef_) # get the absolute value of the coefficients to understand the importance of each feature regardless of direction (positive or negative)
+        'abs_coefficient': np.abs(model.coef_) # get the absolute value of the coefficients to understand the importance of each feature regardless of direction (positive or negative)
     })
 
     # grouping features by original feature and summing their absolute coefficients to get a sense of relative importance
@@ -80,18 +88,19 @@ def polynomial_regression(ticker, degree=2):
     dailyReturnsTerms = [f for f in feature_names if 'Return Over 5 Days' in f]
 
     # calculating the total importance for each original feature by summing the absolute coefficients of all polynomial terms that include that feature
-    volumeImportance = coef_df[coef_df['Feature'].isin(volumeTerms)]['Absolute Coefficient'].sum()
-    volumeChangeRatioImportance = coef_df[coef_df['Feature'].isin(volumeChangeRatioTerms)]['Absolute Coefficient'].sum()
-    positionIn52WeekRangeImportance = coef_df[coef_df['Feature'].isin(positionIn52WeekRangeTerms)]['Absolute Coefficient'].sum()
-    returnOver5DaysImportance = coef_df[coef_df['Feature'].isin(dailyReturnsTerms)]['Absolute Coefficient'].sum()
+    volumeImportance = coef_df[coef_df['Feature'].isin(volumeTerms)]['abs_coefficient'].sum()
+    volumeChangeRatioImportance = coef_df[coef_df['Feature'].isin(volumeChangeRatioTerms)]['abs_coefficient'].sum()
+    positionIn52WeekRangeImportance = coef_df[coef_df['Feature'].isin(positionIn52WeekRangeTerms)]['abs_coefficient'].sum()
+    returnOver5DaysImportance = coef_df[coef_df['Feature'].isin(dailyReturnsTerms)]['abs_coefficient'].sum()
 
     # calculating the total importance to get relative importance percentages
     total = volumeImportance + volumeChangeRatioImportance + positionIn52WeekRangeImportance + returnOver5DaysImportance
-    print("\nRelative Feature Importance (%):")
+    print("\n📊 Relative Feature Importance (%):")
     print(f"Volume: {(volumeImportance / total * 100):.1f}%")
     print(f"Volume Change Ratio:{(volumeChangeRatioImportance / total * 100):.1f}%")
     print(f"Position in 52 Week Range:{(positionIn52WeekRangeImportance / total * 100):.1f}%")
     print(f"Return Over 5 Days:{(returnOver5DaysImportance / total * 100):.1f}%")
+    print(f"total percentage: {(volumeImportance / total * 100 + volumeChangeRatioImportance / total * 100 + positionIn52WeekRangeImportance / total * 100 + returnOver5DaysImportance / total * 100):.1f}%")
 
     # evaluating the model on the test set using regression metrics
     # predicting the close price for the test set
@@ -101,11 +110,11 @@ def polynomial_regression(ticker, degree=2):
 
     # saving the model and polynomial transformer for future use in the PWA
     # the model and transformer are saved with the ticker symbol in the filename for retrieval when making predictions in the PWA. 
-    ticker_symbol = ticker
-    cache_dir = Path(__file__).resolve().with_name('__pycache__')
-    cache_dir.mkdir(exist_ok=True)
-    joblib.dump(poly, cache_dir / f'{ticker_symbol}_poly_transformer_grades.pkl')
-    joblib.dump(model, cache_dir / f'{ticker_symbol}_polynomial_regression_model_grades.pkl')
+    ticker_emblem = ticker.upper()
+    machineData = Path(__file__).resolve().with_name('__mlTrainData__')
+    machineData.mkdir(exist_ok=True)
+    joblib.dump(poly, machineData / f'{ticker_emblem}_poly_transformer_grades.pkl')
+    joblib.dump(model, machineData / f'{ticker_emblem}_polynomial_regression_model_grades.pkl')
 
     # Plot actual vs predicted stock close price
     y_test_flat = y_test.values.ravel()
@@ -127,7 +136,7 @@ def polynomial_regression(ticker, degree=2):
     plt.plot([min_price, max_price], [min_price, max_price], 'r--', lw=2)
     plt.xlabel("Actual Close Price")
     plt.ylabel("Predicted Close Price")
-    plt.title(f"{ticker_symbol}: Actual vs Predicted Close Price (degree={degree})")
+    plt.title(f"{ticker_emblem}: Actual vs Predicted Close Price (degree={degree})")
     plt.grid(True)
     plt.show()
 
