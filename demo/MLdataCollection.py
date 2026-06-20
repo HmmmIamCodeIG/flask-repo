@@ -10,22 +10,6 @@ import requests
 
 pd.set_option('display.max_columns', None)  # Display all columns in DataFrame
 
-# def sentiment_analysis(ticker):
-#     try:
-#         url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&ticker={ticker}&apikey=DMZ57B8EW0H0LZJ&limit=10'
-#         r = requests.get(url)
-#         data = r.json()
-#         fiveYearData = data.history(period="5y")
-#         if fiveYearData is not None and 'sentiment_score' in fiveYearData.columns:
-#             fiveYearData['sentiment_score'] = fiveYearData['sentiment_score'].fillna(0)  # fill missing sentiment scores with 0. 
-#             # 0 means neutral sentiment (no opinion / balanced) 
-#             # 1 menas positive liberal liberal liberal happy fun lalala
-#             # -1 means negative 
-#         return fiveYearData
-#     except Exception as e:
-#         print(f"an error occurred while fetching news sentiment data for {ticker}: {e}")
-#         return None
-
 # volume change ratio is how much the volume of stock traded has changed compared to previous day
 def volume_change_ratio(ticker):
     """

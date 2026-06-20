@@ -49,14 +49,7 @@ def predictStockPerformance(ticker):
         # 1 assigned means 2nd pattern 
         # 2 assigned means 3rd pattern
 
-        # predict future stock price based on the average closing price of each cluster
-        cluster_performance = clean_df.groupby("Assigned_Cluster")["Close"].mean()
-        print("📈 Average Closing Price for Each Cluster:")
-        print(cluster_performance)
-
-        future_price_in_5_days = cluster_performance.mean() 
-        print(f"📈 Predicted future stock price for {ticker} in 5 days: ${future_price_in_5_days:.2f}")
-
+        # predict future stock price
     except Exception as e:
         print(f"an error occurred while predicting stock performance for {ticker}: {e}")
         return None
