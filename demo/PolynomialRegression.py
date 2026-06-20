@@ -1,5 +1,3 @@
-import MLdataCollection
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,12 +20,21 @@ def polynomial_regression(ticker, degree=2):
         print(f"No training data returned for {ticker}.")
         return None
 
-    x = training_data[['Volume', 'Volume Change Ratio', 'Position in 52 Week Range', 'Return Over 5 Days']] # features on the x axis
-    y = training_data['Close'] # target variable on the y axis
+    feature_columns = ['Volume', 'Volume Change Ratio', 'Position in 52 Week Range', 'Return Over 5 Days']
+    clean_data = training_data.dropna(subset=feature_columns + ['Close']).copy()
+
+    # check if any usable trainign data rows left
+    if clean_data.empty:
+        print(f"No usable training rows available for {ticker} after dropping missing values.")
+        return None
+
+    # setting features / target variable for the model
+    x = clean_data[feature_columns] # features on the x axis
+    y = clean_data['Close'] # target variable on the y axis
 
     # printing shape for validation
     # printing features used for validation
-    print(f"yay! Dataset shape: {training_data.shape}") 
+    print(f"yay! Dataset shape: {clean_data.shape}") 
     print(f"Features used in model: {x.columns.tolist()}") 
 
     # setting test and training data split 
@@ -139,5 +146,19 @@ def polynomial_regression(ticker, degree=2):
     plt.title(f"{ticker_emblem}: Actual vs Predicted Close Price (degree={degree})")
     plt.grid(True)
     plt.show()
+
+    # prediction if BUY, SELL or HOLD
+    print("\n📈 Stock Performance Prediction:")
+    cluster_action_map = {
+        0: "BUY",
+        1: "HOLD",
+        2: "SELL"
+    }
+    if cluster_action_map == 0:
+        print(f"it is recommended to BUY {ticker}")
+    elif cluster_action_map == 1:
+        print(f"it is recommended to HOLD {ticker}")
+    else:
+        print(f"it is recommended to SELL {ticker}")
 
 polynomial_regression("NVDA")

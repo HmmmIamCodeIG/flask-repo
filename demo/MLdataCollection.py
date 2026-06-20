@@ -2,11 +2,29 @@
 # Goal: Fetch stock data from Yahoo Finance 
 # This module handles all stock data retrieval and processing
 
+# import requests
 import yfinance as yf
 import pandas as pd
 import numpy as np
+import requests
 
 pd.set_option('display.max_columns', None)  # Display all columns in DataFrame
+
+# def sentiment_analysis(ticker):
+#     try:
+#         url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&ticker={ticker}&apikey=DMZ57B8EW0H0LZJ&limit=10'
+#         r = requests.get(url)
+#         data = r.json()
+#         fiveYearData = data.history(period="5y")
+#         if fiveYearData is not None and 'sentiment_score' in fiveYearData.columns:
+#             fiveYearData['sentiment_score'] = fiveYearData['sentiment_score'].fillna(0)  # fill missing sentiment scores with 0. 
+#             # 0 means neutral sentiment (no opinion / balanced) 
+#             # 1 menas positive liberal liberal liberal happy fun lalala
+#             # -1 means negative 
+#         return fiveYearData
+#     except Exception as e:
+#         print(f"an error occurred while fetching news sentiment data for {ticker}: {e}")
+#         return None
 
 # volume change ratio is how much the volume of stock traded has changed compared to previous day
 def volume_change_ratio(ticker):
@@ -107,9 +125,7 @@ def get_stock_data(ticker):
 
     returns: 
         dict_history = {{
-            'Close': DataFrame
-            'Volume': DataFrame
-            'Volume Change Ratio': DataFrame
+            dataframes: close, volume, volume change ratio, return over 5 days, position in 52 week range
         }}
     """
     period = "5y"
@@ -119,8 +135,10 @@ def get_stock_data(ticker):
         hist = tickerStock.history(period=period) # fetch historical data for the specified period
         volume_ratios = hist["Volume"].pct_change().replace([np.inf, -np.inf], np.nan) # calculate volume change ratio from the same history frame
         return_window = hist['Close'].pct_change(periods=5).replace([np.inf, -np.inf], np.nan)
-        # first five days have to be dropped because the return over 5 days cannot be calculated for those days as there is not enough historical data to compare to
-        high_low_diff = highLowDifference(ticker) # calculate the position of the stock price within the 52 week range
+        # first five days have to be dropped since return over 5 days cannot be calculated for those days
+        # not enough historical data to compare to
+        high_low_diff = highLowDifference(ticker) 
+        # sentiment_data = sentiment_analysis(ticker) 
 
         dict_history = pd.DataFrame({
             'Close': hist['Close'],
@@ -128,6 +146,7 @@ def get_stock_data(ticker):
             'Volume Change Ratio': volume_ratios,
             'Return Over 5 Days': return_window,
             'Position in 52 Week Range': high_low_diff['range'],
+            # 'Sentiment Score': sentiment_data['sentiment_score']
         })
         dict_history = dict_history.replace([np.inf, -np.inf], np.nan)
         return dict_history
@@ -135,7 +154,7 @@ def get_stock_data(ticker):
         print(f"an error occured when fetching stock data for {ticker}: {e}")
         return None 
 
-print(get_stock_data('AAPL'))
+# print(get_stock_data('AAPL'))
 ### NOTES:
 # industry search on top industries in each sector, then search for stocks in those industries.
 
