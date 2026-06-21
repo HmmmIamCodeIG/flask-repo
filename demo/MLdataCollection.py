@@ -57,9 +57,9 @@ def returnWindow(ticker, window=5):
         print(f"Invalid ticker symbol: {ticker}")
         return None
     try:
-        stock = yf.Ticker(ticker) 
+        ticker = yf.Ticker(ticker) 
         # 5 yrs of historical data 
-        hist = stock.history(period="5y")
+        hist = ticker.history(period="5y")
         hist_returns = hist['Close'].pct_change(window) # calculate return over 5 day window from same history frame
         return hist_returns
     except Exception as e:
@@ -105,11 +105,17 @@ def get_stock_data(ticker):
     fetch stock data for a given ticker symbol and date range.
     
     args:
-        ticker: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
+        ticker: Stock ticker symbol (e.g., 'AAPL', 'GOOGL') 
+        hist: 
+        
 
     returns: 
         dict_history = {{
-            dataframes: close, volume, volume change ratio, return over 5 days, position in 52 week range
+            close: float, data format: NNN.NN (the )
+            volume: int, data format: NNNNNN (the vol)
+            volume change ratio: float, data format: N.NNNN (the percentage change in volume compared to previous day)
+            return over 5 days: float, data format: N.NNNN (return window )
+            position in 52 week range: float, data format: N.NNNN (, calculated as (current price - lowest price) / (highest price - lowest price))
         }}
     """
     period = "5y"
