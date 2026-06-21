@@ -98,6 +98,15 @@ CREATE TABLE IF NOT EXISTS Recommendations (
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS UserRecommendations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    ticker TEXT NOT NULL,
+    recommendation TEXT NOT NULL,  -- Buy, Sell or Hold
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
 
 -- Optional: Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_portfolio_user ON Portfolio(user_id);

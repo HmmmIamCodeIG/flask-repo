@@ -71,7 +71,7 @@ def analyse_ticker(ticker, user_id=None):
         return None
     return algorithm(ticker, purchase_price, predicted)
 
-
+# algorithm function to calculate everything
 def algorithm(ticker, purchase_price, predicted_price):
     try:
         # calculate the momentum rate by dividing the price difference by the current price and multiplying by 100 to get a percentage

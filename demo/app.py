@@ -160,13 +160,11 @@ def get_stock_info(ticker: str):
         # Get historical data for chart (last 3 months)
         hist = stock.history(period="3mo")
         chart_data = None
-
         if not hist.empty:
             chart_data = {
                 'dates': hist.index.strftime('%Y-%m-%d').tolist(),
                 'close': hist['Close'].round(2).tolist()
             }
-
         return stock_data, chart_data, None
 
     except Exception as e:
@@ -272,7 +270,7 @@ def dashboard():
             momentum_rate = analysis.get('momentum_rate') if analysis else None
             prediction, ml_details = decision_tree_algorithm(ticker, desired_change=10.0, momentum_rate=momentum_rate, user_id=current_user.id)
             
-            # if the ML algorithm returns details, extract the momentum rate and predicted price change for display on the dashboard
+            # if the ML algorithm returns details extract the momentum rate and predicted price change for display on the dashboard
             predicted_price_change = ml_details.get('predicted_price_change') 
             momentum_rate = ml_details.get('momentum_rate') 
 
@@ -315,6 +313,12 @@ def dashboard():
                     'predicted_price_change': predicted_price_change,
                     'momentum_rate': momentum_rate
                 })
+            # store the prediction for each holding in the RECOMMENDATIONS table for display on the dashboard
+            if prediction:
+                with get_db_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""INSERT INTO UserRecommendations(user_id, ticker, recommendation) VALUES (?, ?, ?)""", (current_user.id, ticker, prediction))
+                    conn.commit()
 
         total_portfolio_value = round(cash_balance + portfolio_value, 2)
         overall_return = round(((portfolio_value - total_cost_basis) / total_cost_basis * 100),
@@ -333,7 +337,6 @@ def dashboard():
         # Create Plotly Pie Chart
         # import plotly.express as px
         # import plotly.io as pio
-
         allocation_chart = ""
         if tickers_for_pie and weights_for_pie:
             fig = px.pie(
@@ -538,7 +541,7 @@ def quote_stock():
                         momentum_rate=momentum_rate,
                         user_id=current_user.id
                     )
-                    
+                    # store the prediction for the ticker in the RECOMMENDATIONS table for display on the dashboard
                     if prediction:
                         with get_db_connection() as conn:
                             cursor = conn.cursor()
