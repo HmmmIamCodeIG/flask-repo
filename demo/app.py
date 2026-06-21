@@ -19,6 +19,7 @@ from dotenv import load_dotenv  # use more secure session key
 from datetime import datetime
 import plotly.express as px
 import plotly.io as pio
+from MLAlgorithm import analyse_ticker, decision_tree_algorithm
 
 #region init
 app = Flask(__name__)
@@ -263,6 +264,18 @@ def dashboard():
             shares = holding['shares']
             avg_buy_price = holding['average_buy_price']
 
+            # compute ML momentum +prediction and decision scores per holding for dashboard display.
+            prediction = None
+            predicted_price_change = None
+            # get the momentum rate from analysis function used in the ML algorithm
+            analysis = analyse_ticker(ticker, current_user.id)
+            momentum_rate = analysis.get('momentum_rate') if analysis else None
+            prediction, ml_details = decision_tree_algorithm(ticker, desired_change=10.0, momentum_rate=momentum_rate, user_id=current_user.id)
+            
+            # if the ML algorithm returns details, extract the momentum rate and predicted price change for display on the dashboard
+            predicted_price_change = ml_details.get('predicted_price_change') 
+            momentum_rate = ml_details.get('momentum_rate') 
+
             stock_data, _, error = get_stock_info(ticker)
             current_price = stock_data['current_price'] if stock_data and not error else None
 
@@ -283,7 +296,10 @@ def dashboard():
                     'market_value': market_value,
                     'unrealized_pnl': unrealized_pnl,
                     'pnl_percent': round(((current_price - avg_buy_price) / avg_buy_price * 100), 2) if avg_buy_price > 0 else 0,
-                    'weight': 0  # placeholder
+                    'weight': 0,  # placeholder
+                    'prediction': prediction,
+                    'predicted_price_change': predicted_price_change,
+                    'momentum_rate': momentum_rate
                 })
             else:
                 enhanced_holdings.append({
@@ -294,7 +310,10 @@ def dashboard():
                     'market_value': None,
                     'unrealized_pnl': None,
                     'pnl_percent': None,
-                    'weight': 0
+                    'weight': 0,
+                    'prediction': prediction,
+                    'predicted_price_change': predicted_price_change,
+                    'momentum_rate': momentum_rate
                 })
 
         total_portfolio_value = round(cash_balance + portfolio_value, 2)

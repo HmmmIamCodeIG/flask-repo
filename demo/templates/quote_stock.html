@@ -7,7 +7,6 @@
 
 <form method="POST" action="{{ url_for('quote_stock') }}">
     {{ form.csrf_token }}
-
     <p>Stock Ticker {{ form.tickerName() }}</p>
     <p>{{ form.submit }}</p>
 
@@ -15,15 +14,17 @@
 
 {% if stock_data %}
 <textbubbles>
-    {{ stock_data.ticker }} - {{ stock_data.name }}
-    ${{ stock_data.current_price }} {{ stock_data.currency }}
-    <p>Previous Close:</p>${{ stock_data.previous_close }}
-    <p>Last Updated:</p> {{ stock_data.last_updated }}
+    <h3>{{ stock_data.ticker }} - {{ stock_data.name }}</h3>
+    <p>Current Price: ${{ stock_data.current_price }} {{ stock_data.currency }}</p>
+    <h4>Previous Close</h4>
+    <p>${{ stock_data.previous_close }}</p>
+    <h4>Last Updated</h4>
+    <p>{{ stock_data.last_updated }}</p>
 </textbubbles>
     
 {% if stock_data.summary %}
     <textbubbles>
-        <h2>About the company:</h2>
+        <h2>About the company</h2>
         <p>{{ stock_data.summary[:650] }}...</p>
     </textbubbles>
     {% endif %}

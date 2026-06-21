@@ -55,11 +55,10 @@ h3 {
 
 h4 {
     font-size: 18px;
-    font-weight: bold;
     margin: 8px;
     padding: 4px 4px;
     text-align: center;
-    font-family: 'Ysabeau SC', sans-serif;
+    font-family: 'Mitr', sans-serif;
 }
 
 h5 {
@@ -277,7 +276,7 @@ img {
 
 textbubbles {
     max-width: 800px;
-    margin: 30px auto;
+    margin: 40px auto;
     padding: 40px;
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(85, 85, 85, 0.814);
@@ -290,6 +289,140 @@ textbubbles {
     justify-content: space-between;
     align-items: flex-start;
     gap: 24px;
+}
+
+.textbubble-dashboard {
+    display: inline-flex;
+    vertical-align: top;
+    width: 100%;
+    max-width: 320px;
+    min-height: 250px;
+    margin: 0;
+    padding: 20px;
+}
+
+.dashboard-holding-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.dashboard-holding-title {
+    text-align: left;
+    margin-top: 0;
+}
+
+.dashboard-holding-line {
+    text-align: left;
+    margin: 0;
+}
+
+.dashboard-positive {
+    color: green;
+}
+
+.dashboard-negative {
+    color: red;
+}
+
+.dashboard-holding-actions {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.dashboard-sell-form {
+    display: flex;
+    box-shadow: none;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+}
+
+.dashboard-sell-input {
+    width: 85px;
+    margin: 0;
+}
+
+.dashboard-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 420px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+    width: min(1400px, calc(100% - 48px));
+    margin: 0 auto 40px;
+}
+
+.dashboard-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    align-items: center;
+}
+
+.dashboard-asset-column {
+    position: sticky;
+    top: 20px;
+}
+
+.dashboard-asset-column asset {
+    display: block;
+    width: 100%;
+    max-width: 420px;
+    margin: 20px auto 0;
+}
+
+@media (max-width: 1100px) {
+    .dashboard-wrap {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-asset-column {
+        position: static;
+        order: -1;
+    }
+
+    .textbubble-dashboard {
+        max-width: 100%;
+    }
+}
+
+.button-dashboard-sell-one {
+    background-color: #ff9898;
+    width: 120px;
+    height: auto;
+    color: white;
+    border: none;
+    padding: 10px 10px;
+    border-radius: 0px;
+    cursor: pointer;
+    font-size: 20px;
+    margin: 10px 0;
+    font-family: 'Ysabeau SC', sans-serif;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 300ms ease, box-shadow 300ms ease;
+}
+
+.button-dashboard-sell-all {
+    background-color: #ffeeee;
+    width: 120px;
+    height: auto;
+    color: rgb(187, 57, 57);
+    border: none;
+    padding: 10px 10px;
+    border-radius: 0px;
+    cursor: pointer;
+    font-size: 20px;
+    font-family: 'Ysabeau SC', sans-serif;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 300ms ease, box-shadow 300ms ease;
 }
 
 .progress-details {
@@ -335,3 +468,11 @@ li {
     padding: 4px 4px;
 }
 
+asset {
+    display: block;
+    margin: 20px auto;
+    max-width: 400px;
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(85, 85, 85, 0.814);
+}
