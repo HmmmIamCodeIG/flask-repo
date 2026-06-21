@@ -18,7 +18,17 @@ from textblob import TextBlob
 import yfinance as yf
 from PolynomialRegression import polynomial_regression
 
-def ml_algorithm(ticker, user_id):
+def predicted_price(ticker):
+    try:
+        # fetch the predicted price from the ML results and calculate the momentum rate
+        ml_results = polynomial_regression(ticker)
+        predicted_price = ml_results.get('predicted_close')
+        return predicted_price
+    except Exception as e:
+        print(f"An error occurred while fetching the predicted price for {ticker}: {e}")
+        return None
+
+def ml_algorithm_in_portfolio(ticker, user_id, predicted_price):
     try:
         # get the ticker symbol from the user's portfolio in the database
         conn = sqlite3.connect('database.db')
@@ -42,12 +52,6 @@ def ml_algorithm(ticker, user_id):
             print(f"Missing or invalid average_buy_price for {portfolio_ticker} in Portfolio.")
             return None
 
-        # fetch the predicted price from the ML results and calculate the momentum rate
-        predicted_price = ml_results.get('predicted_close')
-        if predicted_price is None:
-            print(f"Predicted close price is missing for {portfolio_ticker}.")
-            return None
-        
         # calculate the momentum rate as a percentage change from the purchased price to the predicted price
         momentum_rate = ((predicted_price - purchased_price) / purchased_price) * 100
         prediction = {
@@ -65,18 +69,38 @@ def ml_algorithm(ticker, user_id):
         print(f"An error occurred while running the ML algorithm for {ticker}: {e}")
         return None
     
+# for the case that the ticker is not in the portfolio but the user still wants to see the predicted price and momentum rate for that ticker, we can run the polynomial regression model directly
+def ml_algorithm_not_in_portfolio(ticker, predicted_price):
+    try:
+        ml_results = polynomial_regression(ticker)
+        # OOP concept: grabbing the predicted price from the ml_algorithm 
+        if not ml_results:
+            print(f"ML algorithm failed to produce results for {ticker}.")
+            return None
+        ticker_current_price = yf.Ticker(ticker).history(period="1d")['Close'][0]
+        momentum_rate = ((predicted_price - ticker_current_price) / ticker_current_price) * 100
+        prediction = {
+            'ticker': ticker,
+            'current_price': ticker_current_price,
+            'predicted_price': predicted_price,
+            'momentum_rate': momentum_rate,
+        }
+        print(f"Ticker: {ticker}")
+        print(f"Current price: {ticker_current_price:.2f}")
+        print(f"Predicted price: {predicted_price:.2f}")
+        print(f"Momentum rate: {momentum_rate:.2f}%")
+        return prediction
+    except Exception as e:
+        print(f"An error occurred while running the ML algorithm for {ticker}: {e}")
+        return None
+
 def sentiment_analysis(ticker):
     url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&ticker={ticker}&apikey=DMZ57B8EW0H0LZJ&limit=1'
-    try:
-        # fetch the latest news sentiment score for ticker using alphavantage API
-        news = requests.get(url)
-        sentiment_score = news.json()['feed'][0]['overall_sentiment_score']
-        print(f"Sentiment score for {ticker}: {sentiment_score}")
-        return sentiment_score
-    # why does it grey out when no comment here
-    except KeyError as e:
-        print(f"Alphavantage API ratelimit reached")
-        return None
+    # fetch the latest news sentiment score for ticker using alphavantage API
+    news = requests.get(url)
+    sentiment_score = news.json()['feed'][0]['overall_sentiment_score']
+    print(f"Sentiment score for {ticker}: {sentiment_score}")
+    return sentiment_score
 
 # using market cap as a feature in the decision tree algorithm to determine the weight of the sentiment score in the final decision.
 def market_cap_to_revenue(ticker):
@@ -96,7 +120,7 @@ def market_cap_to_revenue(ticker):
         print(f"An error occurred while calculating market cap to revenue ratio for {ticker}: {e}")
         return None
 
-def decision_tree_algorithm(ticker, desired_change, momentum_rate, predicted_price):
+def decision_tree_algorithm(ticker, desired_change, momentum_rate):
     points = 0
     if momentum_rate >= desired_change:
         points += 1
@@ -112,7 +136,19 @@ def decision_tree_algorithm(ticker, desired_change, momentum_rate, predicted_pri
             points += 5
         elif sentiment_analysis(ticker) > 0.15:
             points += 2
-    
-ml_algorithm('AAPL', 1)
-sentiment_analysis('AAPL')
-market_cap_to_revenue('AAPL')
+
+    if market_cap_to_revenue(ticker) is not None:
+        if market_cap_to_revenue(ticker) < 50:
+            points += 2
+        elif market_cap_to_revenue(ticker) < 200:
+            points += 1
+        elif market_cap_to_revenue(ticker) < 500:
+            points += 0
+        elif market_cap_to_revenue(ticker) < 1000:
+            points -= 2
+        else:
+            points -= 5
+
+ml_algorithm_for_prediction('NAB.AX')
+sentiment_analysis('NAB.AX')
+market_cap_to_revenue('NAB.AX')
