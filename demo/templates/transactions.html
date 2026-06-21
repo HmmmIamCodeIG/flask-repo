@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Transaction History - Smart Study{% endblock %}
+{% block title %}Transaction History and ML Recommendations - Smart Study{% endblock %}
 {% block heading %}Transaction History{% endblock %}
 {% block content %}
 <h2>Your Transaction History</h2>
@@ -31,10 +31,8 @@
                 </td>
                 <td>{{ tx.shares }}</td>
                 <td>${{ tx.price_per_share | round(2) }}</td>
-                <td>
-                    <strong style="color: {% if tx.transaction_type == 'BUY' %}red{% else %}green{% endif %};">
+                <td style="color: {% if tx.transaction_type == 'BUY' %}red{% else %}green{% endif %};">
                         ${{ tx.total_amount | round(2) }}
-                    </strong>
                 </td>
             </tr>
             {% endfor %}
@@ -45,7 +43,36 @@
     <div>
         <h5>No transactions yet</h5>
         <p>Your buy and sell history will appear here.</p>
-        <p><a href="{{ url_for('stock_quote') }}">Start Trading</a></p>
+        <p><a href="{{ url_for('quote_stock') }}">Start Trading</a></p>
     </div>
 {% endif %}
+
+<h2>Viewing ML User Recommendations</h2>
+<div>
+    <p>To view your personalized ML recommendations, please visit the <a href="{{ url_for('dashboard') }}">Dashboard</a>.</p>
+    {% if ml_recommendations %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Ticker</th>
+                    <th>Recommendation</th>
+                    <th>Desired Change (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in ml_recommendations %}
+                <tr>
+                    <td>{{ rec.ticker }}</td>
+                    <td style="color: {% if rec.recommendation == 'BUY' %}green{% elif rec.recommendation == 'SELL' %}red{% else %}blue{% endif %}; font-weight: bold;">
+                        {{ rec.recommendation }}
+                    </td>
+                    <td>{{ rec.desired_change }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No ML recommendations available at the moment.</p>
+    {% endif %}
+</div>
 {% endblock %}

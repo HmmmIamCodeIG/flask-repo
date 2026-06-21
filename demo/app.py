@@ -596,6 +596,18 @@ def quote_stock():
  
     return render_template('quote_stock.html', form=form, stock_data=stock_data, chart_data=chart_data, error=error, ticker=tickerName, predicted_price_change=predicted_price_change, momentum_rate=momentum_rate, prediction=prediction, ml_details=ml_details)
 
+def show_previous_recommendations():
+    try:
+        # fetch the previous 5 recommendations for the current user from the UserRecommendations table ordered by most recent first and return as a list of dictionaries
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""SELECT ticker, recommendation, desired_change FROM UserRecommendations WHERE user_id = ? ORDER BY id DESC LIMIT 5""", (current_user.id,))
+            recommendations = cursor.fetchall()
+        return recommendations
+    except Exception as e:
+        print(f"Error fetching previous recommendations: {e}")
+        return []
+
 @app.route('/buy_stock', methods=['POST'])
 @login_required
 def buy_stock():
@@ -612,6 +624,7 @@ def buy_stock():
         flash('Could not fetch current price. Please try again.', 'error')
         return redirect(url_for('stock_quote'))
 
+    # calculate total cost of purchase
     price_per_share = stock_data['current_price']
     total_cost = round(price_per_share * shares, 2)
 
@@ -767,8 +780,16 @@ def transactions():
             # fetch all transactions and store them in a variable to be passed to template for rendering
             transactions = cursor.fetchall()
 
+        try:
+            ml_recommendations = show_previous_recommendations()
+        except Exception as recommendation_error:
+            print(f"Error loading user recommendations: {recommendation_error}")
+            ml_recommendations = []
+
         return render_template('transactions.html',
                                transactions=transactions,
+                               ml_recommendations=ml_recommendations,
+                               non_portfolio_transactions=[],
                                username=current_user.username)
 
     except Exception as e:
