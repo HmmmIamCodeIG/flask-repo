@@ -103,9 +103,13 @@ CREATE TABLE IF NOT EXISTS UserRecommendations (
     user_id INTEGER NOT NULL,
     ticker TEXT NOT NULL,
     recommendation TEXT NOT NULL,  -- Buy, Sell or Hold
+    desired_change REAL DEFAULT 10.0,
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
+
+ALTER TABLE UserRecommendations
+ADD COLUMN desired_change REAL DEFAULT 10.0;
 
 
 -- Optional: Create indexes for better performance

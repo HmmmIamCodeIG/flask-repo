@@ -232,24 +232,59 @@ def add_progress():
 
     return render_template('addProgress.html', form=form, username=current_user.username)
       
+@app.route('/update_desired_change', methods=['POST'])
+@login_required
+def update_desired_change():
+    ticker = request.form.get('ticker')
+    desired_change = request.form.get('desired_change', default=10, type=float)
+    with get_db_connection() as conn:
+        # update the desired change for the specific ticker and user in the UserRecommendations table
+        cursor = conn.cursor()
+        cursor.execute("""UPDATE UserRecommendations
+               SET desired_change = ?
+               WHERE user_id = ? AND ticker = ?""",
+            (desired_change, current_user.id, ticker)
+        )
+        # check for if there are no rows.
+        # in that case, insert a row with the user id, ticker, recommendation as HOLD (default) and the desired change percentage
+        if cursor.rowcount == 0:
+            cursor.execute(
+                """INSERT INTO UserRecommendations (user_id, ticker, recommendation, desired_change)
+                   VALUES (?, ?, ?, ?)""",
+                (current_user.id, ticker, "HOLD", desired_change)
+            )
+        conn.commit()
+
+    # provide feedback to the user that the update was successful 
+    flash(f"Updated target for {ticker} to {desired_change}%")
+    return redirect(url_for('dashboard'))
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
     try:
+        # OPEN db connection to get user cash balance
         with get_db_connection() as conn:
             cursor = conn.cursor()
-
             cursor.execute("SELECT cash_balance FROM UserBalances WHERE user_id = ?", (current_user.id,))
             balance_row = cursor.fetchone()
-            cash_balance = float(balance_row['cash_balance']) if balance_row else 0.0
+            cash_balance = balance_row['cash_balance'] if balance_row else 0.0
 
+            # get the user's stock holdings from the portfolio table
             cursor.execute("""
                 SELECT ticker, shares, average_buy_price
                 FROM Portfolio 
                 WHERE user_id = ?
                 ORDER BY ticker
             """, (current_user.id,))
-            holdings = cursor.fetchall()
+
+            # store the holdings in a list of dictionaries for easier manipulation and display on the dashboard
+            holdings = [dict(row) for row in cursor.fetchall()]
+            for holding in holdings:
+                ticker = holding['ticker']
+                cursor.execute("""SELECT desired_change FROM UserRecommendations WHERE user_id = ? AND ticker = ?""", (current_user.id, ticker))
+                desired_change_row = cursor.fetchone()
+                holding['desired_change'] = desired_change_row['desired_change'] if desired_change_row else 10
 
         # First pass: Calculate market values and total portfolio value
         enhanced_holdings = []
@@ -257,6 +292,7 @@ def dashboard():
         total_unrealized_pnl = 0.0
         total_cost_basis = 0.0
 
+        # for each holding, get the current price and calculate market value
         for holding in holdings:
             ticker = holding['ticker']
             shares = holding['shares']
@@ -268,24 +304,31 @@ def dashboard():
             # get the momentum rate from analysis function used in the ML algorithm
             analysis = analyse_ticker(ticker, current_user.id)
             momentum_rate = analysis.get('momentum_rate') if analysis else None
-            prediction, ml_details = decision_tree_algorithm(ticker, desired_change=10.0, momentum_rate=momentum_rate, user_id=current_user.id)
+            prediction, ml_details = decision_tree_algorithm(ticker, desired_change=holding['desired_change'], momentum_rate=momentum_rate, user_id=current_user.id)
             
             # if the ML algorithm returns details extract the momentum rate and predicted price change for display on the dashboard
             predicted_price_change = ml_details.get('predicted_price_change') 
             momentum_rate = ml_details.get('momentum_rate') 
-
             stock_data, _, error = get_stock_info(ticker)
             current_price = stock_data['current_price'] if stock_data and not error else None
 
+            # changing desired change percentage to 10% from user input using a slider on the dashboard
+            # {% if holding.desired_change %}
+            #     <div class="slidercontainer" hidden>
+            #         <input type="range" min="1" max="100" value="50" class="slider" id="myRange">
+            #     </div>
+            # {% endif %}
             if current_price:
                 market_value = round(shares * current_price, 2)
                 unrealized_pnl = round((current_price - avg_buy_price) * shares, 2)
                 cost_basis = round(avg_buy_price * shares, 2)
 
+                # accumulate totals for portfolio value + unrealized PnL + cost basis for return calculation
                 portfolio_value += market_value
                 total_unrealized_pnl += unrealized_pnl
                 total_cost_basis += cost_basis
 
+                # store all the data for display on the dashboard in a list of dictionaries which is passed to the template for rendering
                 enhanced_holdings.append({
                     'ticker': ticker,
                     'shares': shares,
@@ -293,12 +336,14 @@ def dashboard():
                     'current_price': round(current_price, 2),
                     'market_value': market_value,
                     'unrealized_pnl': unrealized_pnl,
-                    'pnl_percent': round(((current_price - avg_buy_price) / avg_buy_price * 100), 2) if avg_buy_price > 0 else 0,
-                    'weight': 0,  # placeholder
+                    'pnl_percent': round(((current_price - avg_buy_price) / avg_buy_price * 100), 2),
+                    'weight': 0,
                     'prediction': prediction,
                     'predicted_price_change': predicted_price_change,
-                    'momentum_rate': momentum_rate
+                    'momentum_rate': momentum_rate,
+                    'desired_change': holding['desired_change']
                 })
+
             else:
                 enhanced_holdings.append({
                     'ticker': ticker,
@@ -313,18 +358,19 @@ def dashboard():
                     'predicted_price_change': predicted_price_change,
                     'momentum_rate': momentum_rate
                 })
-            # store the prediction for each holding in the RECOMMENDATIONS table for display on the dashboard
+            # store the prediction for each holding in the UserRecommendations table for display on the dashboard
             if prediction:
                 with get_db_connection() as conn:
                     cursor = conn.cursor()
-                    cursor.execute("""INSERT INTO UserRecommendations(user_id, ticker, recommendation) VALUES (?, ?, ?)""", (current_user.id, ticker, prediction))
+                    cursor.execute("""INSERT INTO UserRecommendations(user_id, ticker, recommendation, desired_change) VALUES (?, ?, ?, ?)""", (current_user.id, ticker, prediction, 10.0))
                     conn.commit()
 
+        # calculate the total portfolio value by adding cash balance to the total market value of holdings
         total_portfolio_value = round(cash_balance + portfolio_value, 2)
         overall_return = round(((portfolio_value - total_cost_basis) / total_cost_basis * 100),
                                2) if total_cost_basis > 0 else 0
 
-        # Second pass: Calculate correct weights
+        # Calculate correct weights
         if portfolio_value > 0:
             for holding in enhanced_holdings:
                 if holding['market_value']:
@@ -701,6 +747,7 @@ def sell_stock():
 @login_required
 def transactions():
     try:
+        # retrieve transaction history for the current user
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -717,6 +764,7 @@ def transactions():
                            ORDER BY t.timestamp DESC
                            """, (current_user.id,))
 
+            # fetch all transactions and store them in a variable to be passed to template for rendering
             transactions = cursor.fetchall()
 
         return render_template('transactions.html',

@@ -16,7 +16,7 @@
 
     <div class="dashboard-overview">
     <h5>Overall Return: </h5>
-    <p>{{ overall_return }}</p>
+    <p>${{ overall_return | default(0) | round(2) }}</p>
     </div>
 
     <div class="dashboard-overview">
@@ -80,6 +80,15 @@
                                 </p>
                             </div>
                         {% endif %}
+                        {% if holding.desired_change is not none %}
+                            <form method="POST" action="{{ url_for('update_desired_change') }}" style="display:flex;align-items:center;gap:10px;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="ticker" value="{{ holding.ticker }}">
+                                <label>Desired Profit Target: <span id="value-{{ holding.ticker }}">{{ holding.desired_change or 10 }}</span>%</label>
+                                <input type="range" name="desired_change" min="1" max="100" value="{{ holding.desired_change or 10 }}" class="slider" oninput="document.getElementById('value-{{ holding.ticker }}').innerText=this.value">
+                                <button type="submit">Save</button>
+                            </form>
+                        {% endif %}
                     </div>
                     <div class="dashboard-holding-actions">
                         <form method="POST" action="{{ url_for('sell_stock') }}" class="dashboard-sell-form dashboard-sell-form-one">
@@ -141,6 +150,15 @@
                                 </p>
                             </div>
                         {% endif %}
+                        {% if holding.desired_change is not none %}
+                            <form method="POST" action="{{ url_for('update_desired_change') }}" style="display:flex;align-items:center;gap:10px;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="ticker" value="{{ holding.ticker }}">
+                                <label>Desired Profit Target: <span id="value-{{ holding.ticker }}">{{ holding.desired_change or 10 }}</span>%</label>
+                                <input type="range" name="desired_change" min="1" max="100" value="{{ holding.desired_change or 10 }}" class="slider" oninput="document.getElementById('value-{{ holding.ticker }}').innerText=this.value">
+                                <button type="submit">Save</button>
+                            </form>
+                        {% endif %}
                     </div>
                     <div class="dashboard-holding-actions">
                         <form method="POST" action="{{ url_for('sell_stock') }}" class="dashboard-sell-form dashboard-sell-form-one">
@@ -175,4 +193,5 @@
 {% block extra_scripts %}
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="{{ url_for('static', filename='hidePrediction.js') }}"></script>
+    <script src="{{ url_for('static', filename='slider.js') }}"></script>
 {% endblock %}

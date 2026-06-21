@@ -225,7 +225,9 @@ def decision_tree_algorithm(ticker, desired_change, momentum_rate, user_id=None)
     # decision tree logic:
     # if the predicted price is significantly higher than the user's buy price
     # indicates a strong upside and we should consider buying more if we already own, or buying if we don't own
-    if owns and predicted_pct_vs_buy is not None and desired_change is not None and predicted_pct_vs_buy >= desired_change:
+    if owns and predicted_pct_vs_buy is not None \
+            and desired_change is not None \
+            and predicted_pct_vs_buy >= desired_change:
         s(6, "take_profit")
     if owns and predicted_pct_vs_buy is not None and predicted_pct_vs_buy <= -STOP_LOSS:
         s(5, "stop_loss")
@@ -312,19 +314,19 @@ def decision_tree_algorithm(ticker, desired_change, momentum_rate, user_id=None)
     print(f"Decision for {ticker}: {action} (buy={buy_score}, sell={sell_score})")
     return action, details
 
-### TESTING ###
-ticker_test = 'NAB.AX'
-user_id = 1
-portfolio = in_portfolio(ticker_test, user_id)
-pred_price = predicted_price(ticker_test)
+# ### TESTING ###
+# ticker_test = 'NAB.AX'
+# user_id = 1
+# portfolio = in_portfolio(ticker_test, user_id)
+# pred_price = predicted_price(ticker_test)
 
-# Determine purchase price
-if portfolio:
-    purchase_price = portfolio[1]  # average_buy_price from portfolio
-else:
-    purchase_price = not_in_portfolio(ticker_test)  # current market price
+# # Determine purchase price
+# if portfolio:
+#     purchase_price = portfolio[1]  # average_buy_price from portfolio
+# else:
+#     purchase_price = not_in_portfolio(ticker_test)  # current market price
 
-algorithm(ticker_test, purchase_price, pred_price)
-sentiment_analysis(ticker_test)
-market_cap_to_revenue(ticker_test)
-decision_tree_algorithm(ticker_test, desired_change=10.0, momentum_rate=5.0, user_id=user_id)
+# algorithm(ticker_test, purchase_price, pred_price)
+# sentiment_analysis(ticker_test)
+# market_cap_to_revenue(ticker_test)
+# decision_tree_algorithm(ticker_test, desired_change=10.0, momentum_rate=5.0, user_id=user_id)

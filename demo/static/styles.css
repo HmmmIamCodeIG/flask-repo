@@ -554,3 +554,109 @@ asset {
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(85, 85, 85, 0.814);
 }
+
+.slidecontainer {
+    width: 100%;
+}
+
+/* Range slider styling used on the dashboard target control. */
+input[type="range"].slider {
+    --slider-fill: linear-gradient(90deg, #e45f5f 0%, #ff9f9f 100%);
+    --slider-track: #f0d4d4;
+    --slider-thumb: #ffffff;
+    --slider-thumb-border: #c83f3f;
+    -webkit-appearance: none;
+    appearance: none;
+    width: min(100%, 220px);
+    height: 12px;
+    border-radius: 999px;
+    background: var(--slider-track);
+    box-shadow: inset 0 1px 3px rgba(120, 40, 40, 0.18);
+    outline: none;
+    cursor: pointer;
+    transition: box-shadow 180ms ease, transform 180ms ease, background 180ms ease;
+}
+
+input[type="range"].slider:hover {
+    box-shadow: inset 0 1px 3px rgba(120, 40, 40, 0.24), 0 0 0 3px rgba(255, 152, 152, 0.16);
+}
+
+input[type="range"].slider:focus-visible {
+    box-shadow: inset 0 1px 3px rgba(120, 40, 40, 0.24), 0 0 0 4px rgba(255, 152, 152, 0.28);
+}
+
+input[type="range"].slider::-webkit-slider-runnable-track {
+    height: 12px;
+    border-radius: 999px;
+    background: var(--slider-track);
+}
+
+input[type="range"].slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    margin-top: -6px;
+    border: 2px solid var(--slider-thumb-border);
+    border-radius: 50%;
+    background: var(--slider-thumb);
+    box-shadow: 0 4px 12px rgba(200, 63, 63, 0.24);
+    cursor: pointer;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+input[type="range"].slider:hover::-webkit-slider-thumb,
+input[type="range"].slider:focus-visible::-webkit-slider-thumb {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(200, 63, 63, 0.3);
+}
+
+input[type="range"].slider::-moz-range-track {
+    height: 12px;
+    border-radius: 999px;
+    background: var(--slider-track);
+    border: 0;
+}
+
+input[type="range"].slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border: 2px solid var(--slider-thumb-border);
+    border-radius: 50%;
+    background: var(--slider-thumb);
+    box-shadow: 0 4px 12px rgba(200, 63, 63, 0.24);
+    cursor: pointer;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+input[type="range"].slider:hover::-moz-range-thumb,
+input[type="range"].slider:focus-visible::-moz-range-thumb {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(200, 63, 63, 0.3);
+}
+
+.dashboard-holding-content form {
+    width: 100%;
+    margin: 16px 0 0;
+    padding: 14px 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    box-shadow: none;
+    border: 1px solid rgba(204, 204, 204, 0.7);
+    background: linear-gradient(180deg, #fff8f8 0%, #ffffff 100%);
+}
+
+.dashboard-holding-content form label {
+    font-size: 15px;
+    font-weight: 600;
+    text-align: left;
+    margin: 0;
+}
+
+.dashboard-holding-content form button {
+    align-self: flex-start;
+    margin: 0;
+    padding: 8px 16px;
+    font-size: 14px;
+}
