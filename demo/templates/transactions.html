@@ -1,8 +1,6 @@
 {% extends 'base.html' %}
-
 {% block title %}Transaction History - Smart Study{% endblock %}
 {% block heading %}Transaction History{% endblock %}
-
 {% block content %}
 <h2>Your Transaction History</h2>
 
@@ -14,9 +12,9 @@
                 <th>Date & Time</th>
                 <th>Ticker</th>
                 <th>Type</th>
-                <th style="text-align:right;">Shares</th>
-                <th style="text-align:right;">Price per Share</th>
-                <th style="text-align:right;">Total Amount</th>
+                <th>Shares</th>
+                <th>Price per Share</th>
+                <th>Total Amount</th>
             </tr>
         </thead>
         <tbody>
@@ -31,9 +29,9 @@
                         <span style="color: red; font-weight: bold;">SELL</span>
                     {% endif %}
                 </td>
-                <td style="text-align:right;">{{ tx.shares }}</td>
-                <td style="text-align:right;">${{ tx.price_per_share | round(2) }}</td>
-                <td style="text-align:right;">
+                <td>{{ tx.shares }}</td>
+                <td>${{ tx.price_per_share | round(2) }}</td>
+                <td>
                     <strong style="color: {% if tx.transaction_type == 'BUY' %}red{% else %}green{% endif %};">
                         ${{ tx.total_amount | round(2) }}
                     </strong>

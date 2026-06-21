@@ -2,80 +2,71 @@
 {% block content %} 
 <h1>The Dashboard</h1>
 <h2>You're logged in!</h2>
-<p>Use the navigation bar to access different features of the app.</p>
+<h3>Use the navigation bar to access different features of the app.</h3>
 
-<h5>Cash Balance</h5>
-<h3>${{ cash_balance | default(0) | round(2) }}</h3>
+<h5>Cash Balance: </h5>
+<p>${{ cash_balance | default(0) | round(2) }}</p>
 
-<h5>Portfolio Value</h5>
-<h3>${{ portfolio_value | default(0) | round(2) }}</h3>
+<h5>Portfolio Value: </h5>
+<p>${{ portfolio_value | default(0) | round(2) }}</p>
 
-<h6>Overall Return</h6>
-<h3>
-	{{ overall_return }}
-</h3>
+<h5>Overall Return: </h5>
+<p>{{ overall_return }}</p>
 
-<h5>Total P&L</h5>
-<h3>
-	${{ total_unrealized_pnl | default(0) | round(2) }}
-</h3>
+<h5>Total P&L: </h5>
+<p>${{ total_unrealized_pnl | default(0) | round(2) }}</p>
 
-<h6>Top Gainer</h6>
+<h2>Top Gainer</h2>
 {% if top_gainer %}
-    <h5>{{ top_gainer.ticker }}</h5>
-    <p>
-        +${{ top_gainer.unrealized_pnl | round(2) }} ({{ top_gainer.pnl_percent }}%)
-    </p>
+    <p>{{ top_gainer.ticker }}</p>
+    <p>+${{ top_gainer.unrealized_pnl | round(2) }} ({{ top_gainer.pnl_percent }}%)</p>
 {% else %}
     <p>No gainers yet.</p>
 {% endif %}
 
-<h6>Top Loser</h6>
+<h2>Top Loser</h2>
 {% if top_loser %}
-    <h5>{{ top_loser.ticker }}</h5>
-    <p>
-        ${{ top_loser.unrealized_pnl | round(2) }} ({{ top_loser.pnl_percent }}%)
-    </p>
+    <p>{{ top_loser.ticker }}</p>
+    <p>${{ top_loser.unrealized_pnl | round(2) }} ({{ top_loser.pnl_percent }}%)</p>
 {% else %}
     <p>No losers yet.</p>
 {% endif %}
 
-<h5>Asset Allocation</h5>
+<h3>Asset Allocation</h3>
 {{ allocation_chart | safe }}
 
 <!-- Holdings Table -->
-<h4>Your Portfolio Holdings</h4>
+<h3>Your Portfolio Holdings</h3>
 
 {% if holdings %}
-<div>
     <table>
         <thead>
             <tr>
                 <th>Ticker</th>
-                <th style="text-align:right;">Shares Owned</th>
-                <th style="text-align:right;">Avg Buy Price</th>
-                <th style="text-align:right;">Current Price</th>
-                <th style="text-align:right;">Market Value</th>
-                <th style="text-align:right;">Unrealized P&L</th>
-                <th style="text-align:right;">% Return</th>
-                <th style="text-align:center;">Sell Shares</th>
+                <th>Shares Owned</th>
+                <th>Buy Price</th>
+                <th>Current Price</th>
+                <th>Market Value</th>
+                <th>Unrealized P&L</th>
+                <th>Return</th>
+                <th>Sell Shares</th>
             </tr>
         </thead>
         <tbody>
             {% for holding in holdings %}
             <tr>
-                <td><strong>{{ holding.ticker }}</strong></td>
-                <td style="text-align:right;">{{ holding.shares }}</td>
-                <td style="text-align:right;">${{ holding.avg_buy_price }}</td>
-                <td style="text-align:right;">{% if holding.current_price %}${{ holding.current_price }}{% else %}N/A{% endif %}</td>
-                <td style="text-align:right;">{% if holding.market_value %}${{ holding.market_value }}{% else %}—{% endif %}</td>
-                <td style="text-align:right; color:{% if holding.unrealized_pnl >= 0 %}green{% else %}red{% endif %};">
-                    {% if holding.unrealized_pnl is not none %}${{ holding.unrealized_pnl }}{% else %}—{% endif %}
+                <td>{{ holding.ticker }}</td>
+                <td>{{ holding.shares }}</td>
+                <td>{{ holding.avg_buy_price }}</td>
+                <td>{{ holding.current_price | default('N/A') }}</td>
+                <td>{{ holding.market_value | default('—') }}</td>
+                <td style="color: {{ 'green' if holding.unrealized_pnl >= 0 else 'red' }};">
+                    {{ '$' + "%.2f" | format(holding.unrealized_pnl) if holding.unrealized_pnl is not none else '—' }}
                 </td>
-                <td style="text-align:right; color:{% if holding.pnl_percent >= 0 %}green{% else %}red{% endif %};">
-                    {% if holding.pnl_percent is not none %}{{ holding.pnl_percent }}%{% else %}—{% endif %}
+                <td style="color: {{ 'green' if holding.pnl_percent >= 0 else 'red' }};">
+                    {{ "%.2f" | format(holding.pnl_percent) + '%' if holding.pnl_percent is not none else '—' }}
                 </td>
-                <td style="text-align:center;">
+                <td>
                     <form method="POST" action="{{ url_for('sell_stock') }}" style="display:inline-block; margin-right:8px;">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="ticker" value="{{ holding.ticker }}">
@@ -89,16 +80,14 @@
                         <input type="hidden" name="shares" value="{{ holding.shares }}">
                         <button type="submit" onclick="return confirm('Sell ALL {{ holding.shares }} shares of {{ holding.ticker }}? This action cannot be undone.')">Sell All</button>
                     </form>
+
                 </td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
-</div>
 {% else %}
-    <div>
-        <p>You don't own any stocks yet. <a href="{{ url_for('quote_stock') }}">Search for stocks to buy →</a></p>
-    </div>
+    <p>You don't own any stocks yet. <a href="{{ url_for('quote_stock') }}">Search for stocks to buy →</a></p>
 {% endif %}
 {% endblock %}
 

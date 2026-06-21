@@ -19,6 +19,7 @@
         <a href="{{ url_for('add_progress')}}">Add Progress</a>
         <a href="{{ url_for('view_progress')}}">View Progress</a>
         <a href="{{ url_for('quote_stock')}}"> Stocks </a>
+        <a href="{{ url_for('transactions') }}">Transactions</a>
         {% endif %}
     </nav>
     {% if current_user.is_authenticated %}
