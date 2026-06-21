@@ -6,27 +6,29 @@
 # 4. calculate the momentum rate by dividing the price difference by the current price and multiplying by 100 to get a percentage
 # 5. return the predicted price and momentum rate to the PWA for display in the in the quote_stock.html template when the user clicks on a stock in their portfolio.
 
+# the decision tree model:
+# 1 means BUY, 0 means HOLD, -1 means SELL
+# allow for other current value variables (news headlines using alphavantage)
 # note to self to make it so it grabs all ticker's in the user's portfolio and runs the ML algorithm for each ticker.
 # returning a dictionary of the predicted price and momentum rate for each ticker.
 
 import sqlite3
+import requests
+from textblob import TextBlob
+import yfinance as yf
 from PolynomialRegression import polynomial_regression
 
 def ml_algorithm(ticker, user_id):
     try:
         # get the ticker symbol from the user's portfolio in the database
-        connection = sqlite3.connect('database.db')
-        cursor = connection.cursor()
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
         cursor.execute(
             "SELECT ticker, average_buy_price FROM Portfolio WHERE user_id = ? AND ticker = ?",
             (user_id, ticker) # parametrised for security to prevent SQL injection
         )
-        portfolio = cursor.fetchone()
-
-        # check if a ticker is in the user's portfolio before running the ML algorithm.
-        if not portfolio:
-            print(f"{ticker} is not in the user's portfolio.")
-            return None
+        portfolio = cursor.fetchone() 
+        conn.close()
         portfolio_ticker, purchased_price = portfolio
 
         # run the polynomial regression model to get the predicted price for the ticker.
@@ -62,5 +64,55 @@ def ml_algorithm(ticker, user_id):
     except Exception as e:
         print(f"An error occurred while running the ML algorithm for {ticker}: {e}")
         return None
+    
+def sentiment_analysis(ticker):
+    url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&ticker={ticker}&apikey=DMZ57B8EW0H0LZJ&limit=1'
+    try:
+        # fetch the latest news sentiment score for ticker using alphavantage API
+        news = requests.get(url)
+        sentiment_score = news.json()['feed'][0]['overall_sentiment_score']
+        print(f"Sentiment score for {ticker}: {sentiment_score}")
+        return sentiment_score
+    # why does it grey out when no comment here
+    except KeyError as e:
+        print(f"Alphavantage API ratelimit reached")
+        return None
 
-ml_algorithm('CBA.AX', 1)
+# using market cap as a feature in the decision tree algorithm to determine the weight of the sentiment score in the final decision.
+def market_cap_to_revenue(ticker):
+    try:
+        tickerStock = yf.Ticker(ticker)
+        market_cap = tickerStock.info['marketCap']
+        # annual revenue of the company 
+        annual_revenue = tickerStock.info['totalRevenue']
+        if annual_revenue > 0:
+            market_cap_to_revenue = (market_cap / annual_revenue) * 100
+            print(f"Market Cap to Revenue Ratio for {ticker}: {market_cap_to_revenue:.2f}")
+            return market_cap_to_revenue
+        else:
+            print(f"Annual revenue is zero or negative for {ticker}, cannot calculate market cap to revenue ratio.")
+            return None
+    except Exception as e:
+        print(f"An error occurred while calculating market cap to revenue ratio for {ticker}: {e}")
+        return None
+
+def decision_tree_algorithm(ticker, desired_change, momentum_rate, predicted_price):
+    points = 0
+    if momentum_rate >= desired_change:
+        points += 1
+    elif momentum_rate < 0: 
+        points -= 1
+
+    if sentiment_analysis(ticker) is not None:
+        if sentiment_analysis(ticker) <= -0.35: 
+            points -= 5
+        elif sentiment_analysis(ticker) <= 0.15: 
+            points -= 2
+        elif sentiment_analysis(ticker) > 0.35:
+            points += 5
+        elif sentiment_analysis(ticker) > 0.15:
+            points += 2
+    
+ml_algorithm('AAPL', 1)
+sentiment_analysis('AAPL')
+market_cap_to_revenue('AAPL')

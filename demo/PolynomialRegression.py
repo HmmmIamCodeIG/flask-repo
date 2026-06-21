@@ -51,8 +51,8 @@ def polynomial_regression(ticker, show_plot=False):
     # weight parameters - how much each 
     weightVolume = 1.2
     weightVolumeChangeRatio = 1.2
-    weightPositionIn52WeekRange = 1.0
-    weightReturnOver5Days = 1.5
+    weightPositionIn52WeekRange = 0.5
+    weightReturnOver5Days = 1.0
 
     # creating a copy so original data can be used for validation and testing without the weights applied
     # also allows for easy experimentation with different weights 
@@ -182,4 +182,4 @@ def polynomial_regression(ticker, show_plot=False):
 
 
 if __name__ == "__main__":
-    polynomial_regression("AAPL", show_plot=True)
+    polynomial_regression("MAGA", show_plot=True)
