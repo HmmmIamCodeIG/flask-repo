@@ -73,8 +73,10 @@ h5 {
 hr {
     border: none;
     border-top: 1px solid #ccc;
-    margin-top: 20px;
+    margin-top: 30px;
     margin-bottom: 20px;
+    max-width: 300px;
+    max-height: 3px;
 }
 
 form {
@@ -301,6 +303,27 @@ textbubbles {
     padding: 20px;
 }
 
+.dashboard-overview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.dashboard-overview {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 250px;
+    min-height: 180px;
+    padding: 20px;
+    border-radius: 8px;
+    box-sizing: border-box;
+    box-shadow: 0 0 10px rgba(85, 85, 85, 0.814);
+    margin: 10px;
+}
+
 .dashboard-holding-content {
     flex: 1;
     min-width: 0;
@@ -341,7 +364,7 @@ textbubbles {
 }
 
 .dashboard-sell-input {
-    width: 85px;
+    width: 120px;
     margin: 0;
 }
 
@@ -411,12 +434,30 @@ textbubbles {
     background-color: #ffeeee;
     width: 120px;
     height: auto;
-    color: rgb(187, 57, 57);
+    color: #991f1f;
     border: none;
     padding: 10px 10px;
     border-radius: 0px;
     cursor: pointer;
     font-size: 20px;
+    font-family: 'Ysabeau SC', sans-serif;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 300ms ease, box-shadow 300ms ease;
+}
+
+.button-dashboard-ML-prediction {
+    background-color: #ffeeee;
+    width: 120px;
+    height: auto;
+    color: #991f1f;
+    border: none;
+    padding: 10px 10px;
+    border-radius: 0px;
+    cursor: pointer;
+    font-size: 16px;
     font-family: 'Ysabeau SC', sans-serif;
     font-weight: bold;
     display: inline-flex;

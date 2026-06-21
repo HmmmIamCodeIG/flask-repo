@@ -88,9 +88,22 @@ CREATE TABLE IF NOT EXISTS Transactions (
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS Recommendations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    ticker TEXT NOT NULL,
+    recommendation TEXT NOT NULL,  -- Buy, Sell or Hold
+    details TEXT,               -- Why the model chose the reccomendation
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+);
+
+
 -- Optional: Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_portfolio_user ON Portfolio(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_user ON Transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_transactions_ticker ON Transactions(ticker);
+CREATE INDEX IF NOT EXISTS idx_recommendations_user ON Recommendations(user_id);
+CREATE INDEX IF NOT EXISTS idx_recommendations_ticker ON Recommendations(ticker);
 
 -- sqlite3 database.db ".read schema.sql"

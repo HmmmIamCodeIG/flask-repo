@@ -1,23 +1,26 @@
 document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".js-toggle-prediction").forEach((button) => {
+    document.querySelectorAll(".js-toggle-prediction").forEach(button => {
         button.addEventListener("click", () => {
-            const predictionBlock = button.previousElementSibling;
+            const card = button.closest(".textbubble-dashboard");
 
-            if (!predictionBlock) {
-                return;
+            const prediction = card.querySelector(".dashboard-ml-prediction");
+            const momentum = card.querySelector(".dashboard-momentum-rate");
+
+            const isHidden = prediction?.hidden ?? true;
+
+            if (prediction) {
+                prediction.hidden = !isHidden;
             }
 
-            const isHidden = predictionBlock.hasAttribute("hidden");
-
-            if (isHidden) {
-                predictionBlock.removeAttribute("hidden");
-                button.textContent = "Hide Prediction";
-                button.setAttribute("aria-expanded", "true");
-            } else {
-                predictionBlock.setAttribute("hidden", "");
-                button.textContent = "Show Prediction";
-                button.setAttribute("aria-expanded", "false");
+            if (momentum) {
+                momentum.hidden = !isHidden;
             }
+
+            button.textContent = isHidden
+                ? "Hide Prediction"
+                : "Show Prediction";
+
+            button.setAttribute("aria-expanded", isHidden);
         });
     });
 });

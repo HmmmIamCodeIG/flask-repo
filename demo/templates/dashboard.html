@@ -3,34 +3,49 @@
 <h1>The Dashboard</h1>
 <h2>You're logged in!</h2>
 <h3>Use the navigation bar to access different features of the app.</h3>
+<div class="dashboard-overview-container">
+    <div class="dashboard-overview">
+    <h5>Cash Balance: </h5>
+    <p>${{ cash_balance | default(0) | round(2) }}</p>
+    </div>
 
-<h5>Cash Balance: </h5>
-<p>${{ cash_balance | default(0) | round(2) }}</p>
+    <div class="dashboard-overview">
+    <h5>Portfolio Value: </h5>
+    <p>${{ portfolio_value | default(0) | round(2) }}</p>
+    </div>
 
-<h5>Portfolio Value: </h5>
-<p>${{ portfolio_value | default(0) | round(2) }}</p>
+    <div class="dashboard-overview">
+    <h5>Overall Return: </h5>
+    <p>{{ overall_return }}</p>
+    </div>
 
-<h5>Overall Return: </h5>
-<p>{{ overall_return }}</p>
+    <div class="dashboard-overview">
+    <h5>Total P&L: </h5>
+    <p>${{ total_unrealized_pnl | default(0) | round(2) }}</p>
+    </div>
 
-<h5>Total P&L: </h5>
-<p>${{ total_unrealized_pnl | default(0) | round(2) }}</p>
+    <div class="dashboard-overview">
+    <h2>Top Gainer</h2>
+    {% if top_gainer %}
+        <h3>{{ top_gainer.ticker }}</h3>
+        <p>+${{ top_gainer.unrealized_pnl | round(2) }} ({{ top_gainer.pnl_percent }}%)</p>
+    {% else %}
+        <p>No gainers yet.</p>
+    {% endif %}
+    </div>
 
-<h2>Top Gainer</h2>
-{% if top_gainer %}
-    <p>{{ top_gainer.ticker }}</p>
-    <p>+${{ top_gainer.unrealized_pnl | round(2) }} ({{ top_gainer.pnl_percent }}%)</p>
-{% else %}
-    <p>No gainers yet.</p>
-{% endif %}
+    <div class="dashboard-overview">
+    <h2>Top Loser</h2>
+    {% if top_loser %}
+        <h3>{{ top_loser.ticker }}</h3>
+        <p>${{ top_loser.unrealized_pnl | round(2) }} ({{ top_loser.pnl_percent }}%)</p>
+    {% else %}
+        <p>No losers yet.</p>
+    {% endif %}
+    </div>
+</div>
 
-<h2>Top Loser</h2>
-{% if top_loser %}
-    <p>{{ top_loser.ticker }}</p>
-    <p>${{ top_loser.unrealized_pnl | round(2) }} ({{ top_loser.pnl_percent }}%)</p>
-{% else %}
-    <p>No losers yet.</p>
-{% endif %}
+<hr>
 
 <h3>Your Portfolio Holdings</h3>
 <div class="dashboard-wrap">
@@ -58,10 +73,12 @@
                                 </p>
                             </div>
                         {% endif %}
-                        {% if holding.momentum_rate is not none %}
-                            <p type="hidden" class="dashboard-holding-line" hidden>
-                                Momentum Rate: {{ "%.2f" | format(holding.momentum_rate) }}%
-                            </p>
+                        {% if holding.momentum_rate %}
+                            <div class="dashboard-momentum-rate" hidden>
+                                <p class="dashboard-holding-line">
+                                    Momentum Rate: {{ "%.2f" | format(holding.momentum_rate) }}%
+                                </p>
+                            </div>
                         {% endif %}
                     </div>
                     <div class="dashboard-holding-actions">
@@ -117,10 +134,12 @@
                                 </p>
                             </div>
                         {% endif %}
-                        {% if holding.momentum_rate is not none %}
-                            <p class="dashboard-holding-line" hidden>
-                                Momentum Rate: {{ "%.2f" | format(holding.momentum_rate) }}%
-                            </p>
+                        {% if holding.momentum_rate %}
+                            <div class="dashboard-momentum-rate" hidden>
+                                <p class="dashboard-holding-line">
+                                    Momentum Rate: {{ "%.2f" | format(holding.momentum_rate) }}%
+                                </p>
+                            </div>
                         {% endif %}
                     </div>
                     <div class="dashboard-holding-actions">
@@ -135,9 +154,9 @@
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="ticker" value="{{ holding.ticker }}">
                             <input type="hidden" name="shares" value="{{ holding.shares }}">
-                            <button type="submit" class="button-dashboard-sell-all" onclick="return confirm('Sell ALL {{ holding.shares }} shares of {{ holding.ticker }}? This action cannot be undone.')">Sell All</button>
+                            <button type="submit" class="button-dashboard-sell-all" onclick="return confirm('Sell ALL {{ holding.shares }} shares of {{ holding.tcker }}? This action cannot be undone.')">Sell All</button>
                         </form>
-
+                                            
                         <button type="button" class="button-dashboard-ML-prediction js-toggle-prediction" aria-expanded="false">
                             Show Prediction
                         </button>

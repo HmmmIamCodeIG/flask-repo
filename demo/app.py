@@ -19,7 +19,7 @@ from dotenv import load_dotenv  # use more secure session key
 from datetime import datetime
 import plotly.express as px
 import plotly.io as pio
-from MLAlgorithm import analyse_ticker, decision_tree_algorithm
+from MLAlgorithm import analyse_ticker, decision_tree_algorithm, algorithm, predicted_price, not_in_portfolio
 
 #region init
 app = Flask(__name__)
@@ -497,23 +497,55 @@ def view_progress():
 @app.route('/quote_stock', methods=['GET', 'POST'])
 @login_required
 def quote_stock():
-    form = QuoteForm() # initialise the form
+    form = QuoteForm()  
     stock_data = None
     chart_data = None
     error = None
     tickerName = None
-        
+    predicted_price_change = None
+    momentum_rate = None
+    prediction = None
+    ml_details = None
+ 
     # Check if the form has been submitted and passes all CSRF/validation checks
     if form.validate_on_submit():
-        tickerName = request.form.get('tickerName', '').strip()
+        tickerName = request.form.get('tickerName', '').strip().upper()
 
-        if tickerName:
-            stock_data, chart_data, error = get_stock_info(tickerName) # if valid, call ticker info
+        if not tickerName:
+            error = "Please enter a stock ticker symbol (e.g. AAPL)"
         else:
-            error = "Please enter a stock ticker symbol (e.g. AAPL)" # trigger error message if no data is sent through
+            stock_data, chart_data, error = get_stock_info(tickerName)
+            
+            if not error:
+                # call the ML algorithm functions to get the current price, predicted price, and momentum rate for the ticker
+                current_price = not_in_portfolio(tickerName)
+                predicted = predicted_price(tickerName)
 
-    return render_template('quote_stock.html', form=form, stock_data=stock_data, chart_data=chart_data, error=error, tickerName=tickerName, username=current_user.username)
+                if current_price is None or predicted is None:
+                    error = f"Could not retrieve pricing or prediction data for {tickerName}"
+                else:
+                    # call the main algorithm function 
+                    ml_result = algorithm(tickerName, current_price, predicted)
+                    # if the algorithm returns a result extact and store the predicted price change and momentum rate for display on the quote page
+                    if ml_result:
+                        predicted_price_change = ml_result['predicted_price']
+                        momentum_rate = ml_result['momentum_rate']
 
+                    # call the decision tree algorithm to get a prediction and details for the ticker based on the momentum rate and predicted price range
+                    prediction, ml_details = decision_tree_algorithm(
+                        tickerName,
+                        desired_change=10.0,
+                        momentum_rate=momentum_rate,
+                        user_id=current_user.id
+                    )
+                    
+                    if prediction:
+                        with get_db_connection() as conn:
+                            cursor = conn.cursor()
+                            cursor.execute("""INSERT INTO RECOMMENDATIONS (user_id, ticker, recommendation) VALUES (?, ?, ?)""", (current_user.id, tickerName, prediction))
+                            conn.commit()
+ 
+    return render_template('quote_stock.html', form=form, stock_data=stock_data, chart_data=chart_data, error=error, ticker=tickerName, predicted_price_change=predicted_price_change, momentum_rate=momentum_rate, prediction=prediction, ml_details=ml_details)
 
 @app.route('/buy_stock', methods=['POST'])
 @login_required

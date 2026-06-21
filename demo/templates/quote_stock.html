@@ -77,5 +77,23 @@
         Buy Shares
     </button>
 {% endif %}
-{% endblock %}
 
+{% if ml_details %}
+<textbubbles>
+    <h2>ML Prediction Details</h2>
+    {% if momentum_rate is not none %}
+        <p>Momentum:
+            <span class="{{ 'text-success' if momentum_rate > 0 else ('text-danger' if momentum_rate < 0 else 'text-secondary') }}">
+                {{ "%.2f"|format(momentum_rate) }}%
+            </span>
+        </p>
+
+        <p>Sell or Buy or Hold: 
+            <span class="{{ 'text-success' if prediction == 'BUY' else ('text-danger' if prediction == 'SELL' else 'text-secondary') }}">
+                {{ prediction }}
+            </span>
+        </p>
+    {% endif %}
+</textbubbles>
+{% endif %}
+{% endblock %}
