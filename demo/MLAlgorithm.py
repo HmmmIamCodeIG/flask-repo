@@ -17,92 +17,131 @@ import requests
 from textblob import TextBlob
 import yfinance as yf
 from PolynomialRegression import polynomial_regression
+import sqlite3
+import yfinance as yf
 
 def predicted_price(ticker):
     try:
-        # fetch the predicted price from the ML results and calculate the momentum rate
+        # fetch the predicted price from the polynomial regression model
         ml_results = polynomial_regression(ticker)
-        predicted_price = ml_results.get('predicted_close')
-        return predicted_price
+        if not ml_results:
+            return None
+        return ml_results.get('predicted_close')
     except Exception as e:
-        print(f"An error occurred while fetching the predicted price for {ticker}: {e}")
+        print(f"[predicted_price] Error for {ticker}: {e}")
         return None
 
-def ml_algorithm_in_portfolio(ticker, user_id, predicted_price):
+def in_portfolio(ticker, user_id):
+    if user_id is None:
+        return None
+    # fetch the average_buy_price for the ticker from the Portfolio table for the given user_id
     try:
-        # get the ticker symbol from the user's portfolio in the database
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT ticker, average_buy_price FROM Portfolio WHERE user_id = ? AND ticker = ?",
-            (user_id, ticker) # parametrised for security to prevent SQL injection
-        )
-        portfolio = cursor.fetchone() 
+        # fetch the average_buy_price for the ticker from the Portfolio table for the given user_id
+        cursor.execute("""SELECT ticker, average_buy_price FROM Portfolio WHERE user_id = ? AND ticker = ?""", (user_id, ticker))
+        portfolio = cursor.fetchone()
         conn.close()
-        portfolio_ticker, purchased_price = portfolio
-
-        # run the polynomial regression model to get the predicted price for the ticker.
-        ml_results = polynomial_regression(portfolio_ticker)
-        if not ml_results:
-            print(f"ML algorithm failed to produce results for {portfolio_ticker}.")
+        
+        if portfolio is None:
+            return None  # Not in portfolio
+        # Check if average_buy_price is valid
+        ticker_symbol, avg_buy_price = portfolio
+        if avg_buy_price is None or avg_buy_price <= 0:
+            print(f"[in_portfolio] Invalid average_buy_price for {ticker_symbol}")
             return None
-
-        # check if the purchased price is valid before calculating the momentum rate.
-        if purchased_price is None or purchased_price <= 0:
-            print(f"Missing or invalid average_buy_price for {portfolio_ticker} in Portfolio.")
-            return None
-
-        # calculate the momentum rate as a percentage change from the purchased price to the predicted price
-        momentum_rate = ((predicted_price - purchased_price) / purchased_price) * 100
-        prediction = {
-            'ticker': portfolio_ticker,
-            'purchased_price': purchased_price,
-            'predicted_price': predicted_price,
-            'momentum_rate': momentum_rate,
-        }
-        print(f"Ticker: {portfolio_ticker}")
-        print(f"Purchased price: {purchased_price:.2f}")
-        print(f"Predicted price: {predicted_price:.2f}")
-        print(f"Momentum rate: {momentum_rate:.2f}%")
-        return prediction
+        return (ticker_symbol, avg_buy_price)
     except Exception as e:
-        print(f"An error occurred while running the ML algorithm for {ticker}: {e}")
+        print(f"[in_portfolio] Error for {ticker}: {e}")
         return None
-    
-# for the case that the ticker is not in the portfolio but the user still wants to see the predicted price and momentum rate for that ticker, we can run the polynomial regression model directly
-def ml_algorithm_not_in_portfolio(ticker, predicted_price):
+
+def not_in_portfolio(ticker):
     try:
         ml_results = polynomial_regression(ticker)
-        # OOP concept: grabbing the predicted price from the ml_algorithm 
         if not ml_results:
-            print(f"ML algorithm failed to produce results for {ticker}.")
+            print(f"[not_in_portfolio] ML failed for {ticker}")
             return None
-        ticker_current_price = yf.Ticker(ticker).history(period="1d")['Close'][0]
-        momentum_rate = ((predicted_price - ticker_current_price) / ticker_current_price) * 100
-        prediction = {
-            'ticker': ticker,
-            'current_price': ticker_current_price,
-            'predicted_price': predicted_price,
-            'momentum_rate': momentum_rate,
-        }
-        print(f"Ticker: {ticker}")
-        print(f"Current price: {ticker_current_price:.2f}")
-        print(f"Predicted price: {predicted_price:.2f}")
-        print(f"Momentum rate: {momentum_rate:.2f}%")
-        return prediction
+        # Fetch current price using yfinance
+        history = yf.Ticker(ticker).history(period="1d")
+        if history.empty:
+            print(f"[not_in_portfolio] No price data for {ticker}")
+            return None
+        return history['Close'].iloc[-1]
     except Exception as e:
-        print(f"An error occurred while running the ML algorithm for {ticker}: {e}")
+        print(f"[not_in_portfolio] Error for {ticker}: {e}")
         return None
 
-def sentiment_analysis(ticker):
-    url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&ticker={ticker}&apikey=DMZ57B8EW0H0LZJ&limit=1'
-    # fetch the latest news sentiment score for ticker using alphavantage API
-    news = requests.get(url)
-    sentiment_score = news.json()['feed'][0]['overall_sentiment_score']
-    print(f"Sentiment score for {ticker}: {sentiment_score}")
-    return sentiment_score
+# the analyse ticker function is the main function called by the PWA to get the predicted price and monentum rate for a given ticker
+def analyse_ticker(ticker, user_id=None):
+    portfolio = in_portfolio(ticker, user_id)
+    predicted = predicted_price(ticker)
+    # check if predicted price is valid
+    if predicted is None:
+        print(f"[analyse_ticker] No predicted price for {ticker}")
+        return None
+    if portfolio:
+        # Use average_buy_price
+        purchase_price = portfolio[1]
+    else:
+        # Use current market price
+        purchase_price = not_in_portfolio(ticker)
+    # check if purchase price is valid
+    if purchase_price is None:
+        print(f"[analyse_ticker] Could not determine purchase/current price for {ticker}")
+        return None
+    return algorithm(ticker, purchase_price, predicted)
 
-# using market cap as a feature in the decision tree algorithm to determine the weight of the sentiment score in the final decision.
+
+def algorithm(ticker, purchase_price, predicted_price):
+    try:
+        # calculate the momentum rate by dividing the price difference by the current price and multiplying by 100 to get a percentage
+        momentum_rate = ((predicted_price - purchase_price) / purchase_price) * 100
+        result = {
+            'ticker': ticker,
+            'purchased_price': purchase_price,
+            'predicted_price': predicted_price,
+            'momentum_rate': momentum_rate
+        }
+        print(f"Ticker: {ticker}")
+        print(f"Purchase price: {purchase_price:.2f}")
+        print(f"Predicted price: {predicted_price:.2f}")
+        print(f"Momentum rate: {momentum_rate:.2f}%")
+        return result
+    except Exception as e:
+        print(f"[algorithm] Error for {ticker}: {e}")
+        return None
+
+# using sentiment score as a feature
+def sentiment_analysis(ticker):
+    try:
+        url = f'https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={ticker}&apikey=DMZ57B8EW0H0LZJ&limit=1'
+        response = requests.get(url)
+        data = response.json()
+
+        # Check for API errors or rate limits
+        if 'Information' in data:
+            print(f"[sentiment_analysis] API limit/info message for {ticker}: {data['Information']}")
+            return None
+        if 'Note' in data:
+            print(f"[sentiment_analysis] Rate limited for {ticker}: {data['Note']}")
+            return None
+        if 'Error Message' in data:
+            print(f"[sentiment_analysis] API error for {ticker}: {data['Error Message']}")
+            return None
+        
+        # Check if feed data is available
+        feed = data.get('feed')
+        if not feed:
+            print(f"[sentiment_analysis] No news feed available for {ticker} (likely unsupported ticker/exchange)")
+            return None
+        sentiment_score = feed[0]['overall_sentiment_score']
+        print(f"Sentiment score for {ticker}: {sentiment_score}")
+        return sentiment_score
+    except Exception as e:
+        print(f"[sentiment_analysis] An error occurred while fetching sentiment score for {ticker}: {e}")
+        return None
+
+# using market cap as a feature in the decision tree model
 def market_cap_to_revenue(ticker):
     try:
         tickerStock = yf.Ticker(ticker)
@@ -110,6 +149,7 @@ def market_cap_to_revenue(ticker):
         # annual revenue of the company 
         annual_revenue = tickerStock.info['totalRevenue']
         if annual_revenue > 0:
+            # calculating the market cap
             market_cap_to_revenue = (market_cap / annual_revenue) * 100
             print(f"Market Cap to Revenue Ratio for {ticker}: {market_cap_to_revenue:.2f}")
             return market_cap_to_revenue
@@ -121,34 +161,51 @@ def market_cap_to_revenue(ticker):
         return None
 
 def decision_tree_algorithm(ticker, desired_change, momentum_rate):
+    # variable to keep track of the points for each feature
     points = 0
+    ratio = market_cap_to_revenue(ticker)
+    sentiment = sentiment_analysis(ticker)
+
+    # points for momentum rate
     if momentum_rate >= desired_change:
         points += 1
     elif momentum_rate < 0: 
         points -= 1
 
-    if sentiment_analysis(ticker) is not None:
-        if sentiment_analysis(ticker) <= -0.35: 
+    # points for sentiment score 
+    if sentiment is not None:
+        if sentiment <= -0.35:
             points -= 5
-        elif sentiment_analysis(ticker) <= 0.15: 
+        elif sentiment <= 0.15:
             points -= 2
-        elif sentiment_analysis(ticker) > 0.35:
+        elif sentiment > 0.35:
             points += 5
-        elif sentiment_analysis(ticker) > 0.15:
+        elif sentiment > 0.15:
             points += 2
 
-    if market_cap_to_revenue(ticker) is not None:
-        if market_cap_to_revenue(ticker) < 50:
+    # for market cap ratio
+    if ratio is not None:
+        if ratio < 50:
             points += 2
-        elif market_cap_to_revenue(ticker) < 200:
+        elif ratio < 200:
             points += 1
-        elif market_cap_to_revenue(ticker) < 500:
+        elif ratio < 500:
             points += 0
-        elif market_cap_to_revenue(ticker) < 1000:
+        elif ratio < 1000:
             points -= 2
         else:
             points -= 5
 
-ml_algorithm_for_prediction('NAB.AX')
-sentiment_analysis('NAB.AX')
-market_cap_to_revenue('NAB.AX')
+### TESTING THE ALGORITHM ###
+ticker_test = 'NAB.AX'
+user_id = 1
+portfolio = in_portfolio(ticker_test, user_id)
+pred_price = predicted_price(ticker_test)
+# Determine purchase price
+if portfolio:
+    purchase_price = portfolio[1] # average_buy_price from portfolio
+else:
+    purchase_price = not_in_portfolio(ticker_test) # current market price
+algorithm(ticker_test, purchase_price, pred_price)
+sentiment_analysis(ticker_test)
+market_cap_to_revenue(ticker_test)
