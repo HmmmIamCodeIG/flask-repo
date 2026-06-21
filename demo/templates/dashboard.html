@@ -154,7 +154,7 @@
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="ticker" value="{{ holding.ticker }}">
                             <input type="hidden" name="shares" value="{{ holding.shares }}">
-                            <button type="submit" class="button-dashboard-sell-all" onclick="return confirm('Sell ALL {{ holding.shares }} shares of {{ holding.tcker }}? This action cannot be undone.')">Sell All</button>
+                            <button type="submit" class="button-dashboard-sell-all" onclick="return confirm('Sell ALL {{ holding.shares }} shares of {{ holding.ticker }}? This action cannot be undone.')">Sell All</button>
                         </form>
                                             
                         <button type="button" class="button-dashboard-ML-prediction js-toggle-prediction" aria-expanded="false">
