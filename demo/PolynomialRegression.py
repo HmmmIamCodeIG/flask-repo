@@ -1,0 +1,185 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import joblib
+from pathlib import Path
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.metrics import mean_absolute_error, r2_score
+
+from MLdataCollection import get_stock_data
+
+plt.style.use('ggplot')
+
+def polynomial_regression(ticker, show_plot=False):
+    training_data = get_stock_data(ticker) # get the stock data from MLdataCollection module
+
+    if training_data is None:
+        print(f"No training data returned for {ticker}.")
+        return None
+
+    feature_columns = ['Volume', 'Volume Change Ratio', 'Position in 52 Week Range', 'Return Over 5 Days']  # features 
+    clean_data = training_data.dropna(subset=feature_columns + ['Close']).copy() # 
+
+    # check if any usable trainign data rows left
+    if clean_data.empty:
+        print(f"No usable training rows available for {ticker} after dropping missing values.")
+        return None
+
+    # setting features / target variable for the model
+    x = clean_data[feature_columns] # features on the x axis
+    y = clean_data['Close'] # target variable on the y axis
+
+    # printing shape for validation
+    # printing features used for validation
+    print(f"yay! Dataset shape: {clean_data.shape}") 
+    print(f"Features used in model: {x.columns.tolist()}") 
+
+    # setting test and training data split 
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=0.2, random_state=42
+    )
+
+    # setting the parameters for the polynomial regression model
+    degree = 3 # de
+    use_ridge = True # for polynomial regression. ridge regression used to prevent overfitting. 
+    ridge_alpha = 1.0 # regularisation strength for ridge regression. higher values -> more regularisation
+
+    # weight parameters - how much each 
+    weightVolume = 1.2
+    weightVolumeChangeRatio = 1.2
+    weightPositionIn52WeekRange = 0.5
+    weightReturnOver5Days = 1.0
+
+    # creating a copy so original data can be used for validation and testing without the weights applied
+    # also allows for easy experimentation with different weights 
+    x_train_w = x_train.copy() 
+    x_test_w = x_test.copy()
+    # dataform of the features: 
+
+    x_train_w['Volume'] = x_train_w['Volume'] * weightVolume
+    x_train_w['Volume Change Ratio'] = x_train_w['Volume Change Ratio'] * weightVolumeChangeRatio
+    x_train_w['Position in 52 Week Range'] = x_train_w['Position in 52 Week Range'] * weightPositionIn52WeekRange
+    x_train_w['Return Over 5 Days'] = x_train_w['Return Over 5 Days'] * weightReturnOver5Days
+
+    x_test_w['Volume'] = x_test_w['Volume'] * weightVolume 
+    x_test_w['Volume Change Ratio'] = x_test_w['Volume Change Ratio'] * weightVolumeChangeRatio
+    x_test_w['Position in 52 Week Range'] = x_test_w['Position in 52 Week Range'] * weightPositionIn52WeekRange
+    x_test_w['Return Over 5 Days'] = x_test_w['Return Over 5 Days'] * weightReturnOver5Days
+
+    scaler = StandardScaler()
+    x_train_scaled = scaler.fit_transform(x_train_w)
+    x_test_scaled = scaler.transform(x_test_w)
+
+    # polynomial feature transformation
+    poly = PolynomialFeatures(degree=degree, include_bias=False)
+    x_train_poly = poly.fit_transform(x_train_scaled)
+    x_test_poly = poly.transform(x_test_scaled)
+
+    model = Ridge(alpha=ridge_alpha) if use_ridge else LinearRegression() 
+
+    # training the model
+    # if use_ridge:
+    #     model = Ridge(alpha=ridge_alpha)
+    #     print(f"   Using Ridge (alpha={ridge_alpha})")
+    # else:
+    #     model = LinearRegression()
+    #     print("   Using Linear Regression")
+
+    model.fit(x_train_poly, y_train)
+    print("Model training complete.")
+
+    # feature importance
+    feature_names = poly.get_feature_names_out(x.columns) # get the names of the polynomial features for better interpretability
+    # datavalue of coefficient: 
+
+    coef_df = pd.DataFrame({
+        'Feature': feature_names,
+        'abs_coefficient': np.abs(model.coef_) # get the absolute value of the coefficients to understand the importance of each feature regardless of direction (positive or negative)
+    })
+
+    # grouping features by original feature and summing their absolute coefficients to get a sense of relative importance
+    volumeTerms = [f for f in feature_names if 'Volume' in f]
+    volumeChangeRatioTerms = [f for f in feature_names if 'Volume Change Ratio' in f]
+    positionIn52WeekRangeTerms = [f for f in feature_names if 'Position in 52 Week Range' in f]
+    dailyReturnsTerms = [f for f in feature_names if 'Return Over 5 Days' in f]
+
+    # calculating the total importance for each original feature by summing the absolute coefficients of all polynomial terms that include that feature
+    volumeImportance = coef_df[coef_df['Feature'].isin(volumeTerms)]['abs_coefficient'].sum()
+    volumeChangeRatioImportance = coef_df[coef_df['Feature'].isin(volumeChangeRatioTerms)]['abs_coefficient'].sum()
+    positionIn52WeekRangeImportance = coef_df[coef_df['Feature'].isin(positionIn52WeekRangeTerms)]['abs_coefficient'].sum()
+    returnOver5DaysImportance = coef_df[coef_df['Feature'].isin(dailyReturnsTerms)]['abs_coefficient'].sum()
+
+    # calculating the total importance to get relative importance percentages
+    total = volumeImportance + volumeChangeRatioImportance + positionIn52WeekRangeImportance + returnOver5DaysImportance
+    print("\n📊 Relative Feature Importance (%):")
+    print(f"Volume: {(volumeImportance / total * 100):.1f}%")
+    print(f"Volume Change Ratio:{(volumeChangeRatioImportance / total * 100):.1f}%")
+    print(f"Position in 52 Week Range:{(positionIn52WeekRangeImportance / total * 100):.1f}%")
+    print(f"Return Over 5 Days:{(returnOver5DaysImportance / total * 100):.1f}%")
+    print(f"total percentage: {(volumeImportance / total * 100 + volumeChangeRatioImportance / total * 100 + positionIn52WeekRangeImportance / total * 100 + returnOver5DaysImportance / total * 100):.1f}%")
+
+    # evaluating the model on the test set using regression metrics
+    # predicting the close price for the test set
+    y_test_pred = np.maximum(model.predict(x_test_poly), 0.5)
+    test_r2 = r2_score(y_test, y_test_pred)
+    test_mae = mean_absolute_error(y_test, y_test_pred)
+    print(f"\nTest R2:{test_r2:.4f}")
+    print(f"Test MAE:{test_mae:.4f}")
+
+    # Predict the latest close price estimate using the newest available feature row.
+    latest_features = clean_data[feature_columns].iloc[[-1]].copy()
+    latest_features['Volume'] = latest_features['Volume'] * weightVolume
+    latest_features['Volume Change Ratio'] = latest_features['Volume Change Ratio'] * weightVolumeChangeRatio
+    latest_features['Position in 52 Week Range'] = latest_features['Position in 52 Week Range'] * weightPositionIn52WeekRange
+    latest_features['Return Over 5 Days'] = latest_features['Return Over 5 Days'] * weightReturnOver5Days
+    latest_scaled = scaler.transform(latest_features)
+    latest_poly = poly.transform(latest_scaled)
+    predicted_close = float(np.maximum(model.predict(latest_poly), 0.5)[0])
+
+    # saving the model and polynomial transformer for future use in the PWA
+    # the model and transformer are saved with the ticker symbol in the filename for retrieval when making predictions in the PWA. 
+    ticker_emblem = ticker.upper()
+    machineData = Path(__file__).resolve().with_name('__mlTrainData__')
+    machineData.mkdir(exist_ok=True)
+    joblib.dump(scaler, machineData / f'{ticker_emblem}_scaler_grades.pkl')
+    joblib.dump(poly, machineData / f'{ticker_emblem}_poly_transformer_grades.pkl')
+    joblib.dump(model, machineData / f'{ticker_emblem}_polynomial_regression_model_grades.pkl')
+
+    # Plot actual vs predicted stock close price
+    y_test_flat = y_test.values.ravel()
+    y_test_pred_flat = y_test_pred.ravel()
+
+    # setting the limits for the plot to be slightly beyond the min and max of the actual and predicted values for better visualization
+    min_price = min(y_test_flat.min(), y_test_pred_flat.min())
+    max_price = max(y_test_flat.max(), y_test_pred_flat.max())
+
+    # creating a scatter plot of actual vs predicted close prices w/h reference line
+    if show_plot:
+        plt.figure(figsize=(10, 6))
+        plt.scatter(
+            y_test_flat,
+            y_test_pred_flat,
+            color='steelblue',
+            alpha=0.7,
+            s=50
+        )
+        plt.plot([min_price, max_price], [min_price, max_price], 'r--', lw=2)
+        plt.xlabel("Actual Close Price")
+        plt.ylabel("Predicted Close Price")
+        plt.title(f"{ticker_emblem}: Actual vs Predicted Close Price (degree={degree})")
+        plt.grid(True)
+        plt.show()
+
+    return {
+        'predicted_close': predicted_close,
+        'test_r2': float(test_r2),
+        'test_mae': float(test_mae)
+    }
+
+
+if __name__ == "__main__":
+    polynomial_regression("MAGA", show_plot=True)

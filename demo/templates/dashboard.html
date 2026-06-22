@@ -1,6 +1,197 @@
 {% extends 'base.html' %}
-{% block title %}Dashboard - Smart Study Quiz App{% endblock %}
-{% block heading %}Dashboard{% endblock %}
 {% block content %} 
-    <p!>HOORAY!!!</p>
+<h1>The Dashboard</h1>
+<h2>You're logged in!</h2>
+<h3>Use the navigation bar to access different features of the app.</h3>
+<div class="dashboard-overview-container">
+    <div class="dashboard-overview">
+    <h5>Cash Balance: </h5>
+    <p>${{ cash_balance | default(0) | round(2) }}</p>
+    </div>
+
+    <div class="dashboard-overview">
+    <h5>Portfolio Value: </h5>
+    <p>${{ portfolio_value | default(0) | round(2) }}</p>
+    </div>
+
+    <div class="dashboard-overview">
+    <h5>Overall Return: </h5>
+    <p>${{ overall_return | default(0) | round(2) }}</p>
+    </div>
+
+    <div class="dashboard-overview">
+    <h5>Total P&L: </h5>
+    <p>${{ total_unrealized_pnl | default(0) | round(2) }}</p>
+    </div>
+
+    <div class="dashboard-overview">
+    <h2>Top Gainer</h2>
+    {% if top_gainer %}
+        <h3>{{ top_gainer.ticker }}</h3>
+        <p>+${{ top_gainer.unrealized_pnl | round(2) }} ({{ top_gainer.pnl_percent }}%)</p>
+    {% else %}
+        <p>No gainers yet.</p>
+    {% endif %}
+    </div>
+
+    <div class="dashboard-overview">
+    <h2>Top Loser</h2>
+    {% if top_loser %}
+        <h3>{{ top_loser.ticker }}</h3>
+        <p>${{ top_loser.unrealized_pnl | round(2) }} ({{ top_loser.pnl_percent }}%)</p>
+    {% else %}
+        <p>No losers yet.</p>
+    {% endif %}
+    </div>
+</div>
+
+<hr>
+
+<h3>Your Portfolio Holdings</h3>
+<div class="dashboard-wrap">
+    <div class="dashboard-column dashboard-column-left">
+        {% if holdings %}
+            {% set midpoint = (holdings|length + 1) // 2 %}
+            {% for holding in holdings[:midpoint] %}
+                <textbubbles class="textbubble-dashboard">
+                    <div class="dashboard-holding-content">
+                        <h4 class="dashboard-holding-title">{{ holding.ticker }}</h4>
+                        <p class="dashboard-holding-line">Shares Owned: {{ holding.shares }}</p>
+                        <p class="dashboard-holding-line">Buy Price: {{ holding.avg_buy_price }}</p>
+                        <p class="dashboard-holding-line">Current Price: {{ holding.current_price | default('N/A') }}</p>
+                        <p class="dashboard-holding-line">Market Value: {{ holding.market_value | default('—') }}</p>
+                        <p class="dashboard-holding-line {{ 'dashboard-positive' if holding.unrealized_pnl >= 0 else 'dashboard-negative' }}">
+                            Unrealized P&amp;L: {{ '$' + "%.2f" | format(holding.unrealized_pnl) if holding.unrealized_pnl is not none else '—' }}
+                        </p>
+                        <p class="dashboard-holding-line {{ 'dashboard-positive' if holding.pnl_percent >= 0 else 'dashboard-negative' }}">
+                            Return: {{ "%.2f" | format(holding.pnl_percent) + '%' if holding.pnl_percent is not none else '—' }}
+                        </p>
+                        {% if holding.prediction %}
+                            <div class="dashboard-ml-prediction" hidden>
+                                <p class="dashboard-holding-line">
+                                    ML Prediction: {{ holding.prediction }}
+                                </p>
+                            </div>
+                        {% endif %}
+                        {% if holding.momentum_rate %}
+                            <div class="dashboard-momentum-rate" hidden>
+                                <p class="dashboard-holding-line">
+                                    Momentum Rate: {{ "%.2f" | format(holding.momentum_rate) }}%
+                                </p>
+                            </div>
+                        {% endif %}
+                        {% if holding.desired_change is not none %}
+                            <form method="POST" action="{{ url_for('update_desired_change') }}" style="display:flex;align-items:center;gap:10px;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="ticker" value="{{ holding.ticker }}">
+                                <label>Desired Profit Target: <span id="value-{{ holding.ticker }}">{{ holding.desired_change or 10 }}</span>%</label>
+                                <input type="range" name="desired_change" min="1" max="100" value="{{ holding.desired_change or 10 }}" class="slider" oninput="document.getElementById('value-{{ holding.ticker }}').innerText=this.value">
+                                <button type="submit">Save</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    <div class="dashboard-holding-actions">
+                        <form method="POST" action="{{ url_for('sell_stock') }}" class="dashboard-sell-form dashboard-sell-form-one">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="ticker" value="{{ holding.ticker }}">
+                            <input type="number" name="shares" min="1" max="{{ holding.shares }}" value="1" class="dashboard-sell-input" required>
+                            <button type="submit" class="button-dashboard-sell-one">Sell</button>
+                        </form>
+
+                        <form method="POST" action="{{ url_for('sell_stock') }}" class="dashboard-sell-form dashboard-sell-form-all">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="ticker" value="{{ holding.ticker }}">
+                            <input type="hidden" name="shares" value="{{ holding.shares }}">
+                            <button type="submit" class="button-dashboard-sell-all" onclick="return confirm('Sell ALL {{ holding.shares }} shares of {{ holding.ticker }}? This action cannot be undone.')">Sell All</button>
+                        </form>
+
+                        <button type="button" class="button-dashboard-ML-prediction js-toggle-prediction" aria-expanded="false">
+                            Show Prediction
+                        </button>
+                    </div>
+                </textbubbles>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="dashboard-column dashboard-asset-column">
+        <h4>Asset Allocation</h4>
+        <asset>{{ allocation_chart | safe }}</asset>
+    </div>
+
+    <div class="dashboard-column dashboard-column-right">
+        {% if holdings %}
+            {% set midpoint = (holdings|length + 1) // 2 %}
+            {% for holding in holdings[midpoint:] %}
+                <textbubbles class="textbubble-dashboard">
+                    <div class="dashboard-holding-content">
+                        <h4 class="dashboard-holding-title">{{ holding.ticker }}</h4>
+                        <p class="dashboard-holding-line">Shares Owned: {{ holding.shares }}</p>
+                        <p class="dashboard-holding-line">Buy Price: {{ holding.avg_buy_price }}</p>
+                        <p class="dashboard-holding-line">Current Price: {{ holding.current_price | default('N/A') }}</p>
+                        <p class="dashboard-holding-line">Market Value: {{ holding.market_value | default('—') }}</p>
+                        <p class="dashboard-holding-line {{ 'dashboard-positive' if holding.unrealized_pnl >= 0 else 'dashboard-negative' }}">
+                            Unrealized P&amp;L: {{ '$' + "%.2f" | format(holding.unrealized_pnl) if holding.unrealized_pnl is not none else '—' }}
+                        </p>
+                        <p class="dashboard-holding-line {{ 'dashboard-positive' if holding.pnl_percent >= 0 else 'dashboard-negative' }}">
+                            Return: {{ "%.2f" | format(holding.pnl_percent) + '%' if holding.pnl_percent is not none else '—' }}
+                        </p>
+                        {% if holding.prediction %}
+                            <div class="dashboard-ml-prediction" hidden>
+                                <p class="dashboard-holding-line">
+                                    ML Prediction: {{ holding.prediction }}
+                                </p>
+                            </div>
+                        {% endif %}
+                        {% if holding.momentum_rate %}
+                            <div class="dashboard-momentum-rate" hidden>
+                                <p class="dashboard-holding-line">
+                                    Momentum Rate: {{ "%.2f" | format(holding.momentum_rate) }}%
+                                </p>
+                            </div>
+                        {% endif %}
+                        {% if holding.desired_change is not none %}
+                            <form method="POST" action="{{ url_for('update_desired_change') }}" style="display:flex;align-items:center;gap:10px;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="ticker" value="{{ holding.ticker }}">
+                                <label>Desired Profit Target: <span id="value-{{ holding.ticker }}">{{ holding.desired_change or 10 }}</span>%</label>
+                                <input type="range" name="desired_change" min="1" max="100" value="{{ holding.desired_change or 10 }}" class="slider" oninput="document.getElementById('value-{{ holding.ticker }}').innerText=this.value">
+                                <button type="submit">Save</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                    <div class="dashboard-holding-actions">
+                        <form method="POST" action="{{ url_for('sell_stock') }}" class="dashboard-sell-form dashboard-sell-form-one">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="ticker" value="{{ holding.ticker }}">
+                            <input type="number" name="shares" min="1" max="{{ holding.shares }}" value="1" class="dashboard-sell-input" required>
+                            <button type="submit" class="button-dashboard-sell-one">Sell</button>
+                        </form>
+
+                        <form method="POST" action="{{ url_for('sell_stock') }}" class="dashboard-sell-form dashboard-sell-form-all">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="ticker" value="{{ holding.ticker }}">
+                            <input type="hidden" name="shares" value="{{ holding.shares }}">
+                            <button type="submit" class="button-dashboard-sell-all" onclick="return confirm('Sell ALL {{ holding.shares }} shares of {{ holding.ticker }}? This action cannot be undone.')">Sell All</button>
+                        </form>
+                                            
+                        <button type="button" class="button-dashboard-ML-prediction js-toggle-prediction" aria-expanded="false">
+                            Show Prediction
+                        </button>
+                    </div>
+                </textbubbles>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+{% if not holdings %}
+    <p>You don't own any stocks yet. <a href="{{ url_for('quote_stock') }}">Search for stocks to buy →</a></p>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="{{ url_for('static', filename='hidePrediction.js') }}"></script>
+    <script src="{{ url_for('static', filename='slider.js') }}"></script>
 {% endblock %}

@@ -1,13 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}Login - Smart Study Quiz App{% endblock %}
-{% block heading %}Login{% endblock %}
 {% block content %}
-    <p>ENTER LOGIN DETAILS</p>
+<h1>Enter Your Login Details</h1>
     <form method="POST" action="{{ url_for('login') }}">
-        <p>Username</p>
-        <input type="text" id="username" name="username" placeholder="Username" required>
-        <p>Password</p>
-        <input type="password" id="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
+        {{ form.csrf_token }}
+        <p>Username {{ form.username() }}</p>
+        <p>Password {{ form.password() }}</p>
+        <p>{{ form.submit }}</p>
     </form>
 {% endblock %}

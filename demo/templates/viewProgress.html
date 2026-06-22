@@ -1,24 +1,32 @@
-{% extends 'base.html' %}   
-{% block title %}View Progress - Smart Study Quiz App{% endblock %}
-{% block heading %}Progress Check!!!!{% endblock %}
+{% extends 'base.html' %}
+
+<div class="loader-overlay" id="loaderOverlay">
+  <div class="spinner"></div>
+</div>
+
 {% block content %}
-    <p>View your Progress</p>
+<h1>View your Progress</h1>
     {% if posts %}
-        <table>
-                <tr>
-                    <th>DATE</th>
-                    <th>TITLE</th>
-                    <th>DETAILS</th>
-                </tr>
-            {% for post in posts %}
-                <tr>
-                    <td>{{ post.date }}</td>
-                    <td>{{ post.title }}</td>
-                    <td>{{ post.details }}</td>
-                </tr>
-            {% endfor %}
-        </table>
+        {% for post in posts %}
+            <textbubbles>
+                    <h4>{{ post.title }}</h4>
+                    <p>{{ post.date }}</p>
+                    <p class="progress-details">{{ post.details }}</p>
+                </div>
+                <div class="progress-image">
+                    {% if post.image_path %}
+                        <img src="{{ url_for('static', filename=post.image_path) }}" 
+                            alt="Progress Image" 
+                            class="progress-log-image">
+                    {% else %}
+                        <p class="no-image">No image</p>
+                    {% endif %}
+                </div>
+            </textbubbles>
+        {% endfor %}
     {% else %}
+    <div class="no-progress">
         <p>No progress logs found.</p>
+    </div>
     {% endif %}
 {% endblock %}

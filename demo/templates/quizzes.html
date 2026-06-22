@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %} 
+<h1>Take the Quiz: {{ quiz_title }}</h1>
+{% if feedback %}
+    <div class="feedback">
+        {{ feedback }}
+    </div>
+{% endif %}
+<form method="post">
+    {% for question in questions %}
+        {% set qindex = loop.index0 %}   
+        <div class="question-block">
+            <!-- Display question text -->
+            <p>Q{{ loop.index }}: {{ question.text }}</p>
+            {% for choice in question.choices %}
+            <label class="option-label">
+                <!-- Display choice text -->
+                <input 
+                    type="radio"
+                    name="question_{{ qindex }}"  
+                    value="{{ choice }}"
+                    class="option-input"
+                    {% if user_answers and user_answers[qindex] == choice %}checked{% endif %}>
+                    <!-- Radio button for choice -->
+                <span class="option-text">{{ choice }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    {% endfor %}
+    <button type="submit">Submit Answers</button>
+</form>
+<script src="{{ url_for('static', filename='quiz.js') }}"></script>
+{% endblock %}

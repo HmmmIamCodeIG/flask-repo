@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Quiz Results</h1>
+<h3>Your Performance Overview</h3>
+{% if quiz_results %}
+    <table>
+        <tr>
+            <th>Quiz Title</th>
+            <th>Score</th>
+            <th>Number of Questions</th>
+            <th>Date Taken</th>
+        </tr>
+        {% for result in quiz_results %}
+        <tr>
+            <td>{{ result.quiz_title }}</td>
+            <td>{{ result.score }}</td>
+            <td>{{ result.num_questions }}</td>
+            <td>{{ result.taken_at }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>No quiz results found.</p>
+{% endif %}
+{% endblock %}

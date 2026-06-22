@@ -1,15 +1,12 @@
-{% extends 'base.html' %}   
-{% block title %}Add Progress - Smart Study Quiz App{% endblock %}
-{% block heading %}Add Progress{% endblock %}
+{% extends 'base.html' %}  
 {% block content %}
-    <p>Enter your details to add progress</p>
-    <form method="POST" action="{{ url_for('add_progress') }}">
-        <p>Date
-        <input type="date" name="date" required></p>
-        <p>Title
-        <input type="text" name="title" placeholder="Title" required></p>
-        <p>Details
-        <input type="text" name="details" placeholder="Details" required></p>
-        <button type="submit">Post Progress</button>
+<h1>Add Your Progress</h1>
+    <form method="POST" enctype="multipart/form-data">        
+        {{ form.csrf_token }}
+        <p>Date {{ form.date() }}</p>
+        <p>Title {{ form.title() }}</p>
+        <p>Details {{ form.details() }}</p>
+        <p>Image {{ form.image() }}</p>
+        <p>{{ form.submit }}</p>
     </form>
 {% endblock %}
